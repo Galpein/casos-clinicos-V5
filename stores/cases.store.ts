@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import type { ClinicalCase } from "@/types/clinical-case";
 import { CLINICAL_CASES } from "@/mock/clinicalCases";
+import { LIBRARY_CASES } from "@/mock/libraryCases";
 import { withComputedStatus } from "@/lib/case-factory";
 
 /**
@@ -17,7 +18,7 @@ interface CasesState {
 }
 
 export const useCasesStore = create<CasesState>((set, get) => ({
-  cases: CLINICAL_CASES,
+  cases: [...CLINICAL_CASES, ...LIBRARY_CASES],
 
   addCase: (c) => {
     const saved = withComputedStatus({ ...c, updatedAt: new Date().toISOString() });

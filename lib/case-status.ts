@@ -7,10 +7,13 @@
  *  - el `caseStatusColor` del Library Index,
  *  - la regla de "publicable" (solo en naranja o superior).
  *
- * Rojo  (draft_incomplete): faltan campos mínimos obligatorios.
- * Naranja (internal_usable): mínimos obligatorios completos → usable en
- *          biblioteca interna/docente.
- * Verde (care_ready): además completa los campos CARE para exportar/publicar.
+ * Nomenclatura de cara al usuario ("nivel documental", acordada con Enrique):
+ *   Rojo  → "Borrador": faltan campos mínimos obligatorios.
+ *   Naranja → "Documentación esencial": mínimos completos, el caso ya entra en
+ *             la biblioteca.
+ *   Verde → "CARE completo": además cubre los campos complementarios CARE.
+ * Los identificadores internos (draft_incomplete / internal_usable /
+ * care_ready) no cambian: la terminología es capa de presentación.
  */
 
 import type {
@@ -183,7 +186,7 @@ export const STATUS_META: Record<
   { label: string; sub: string; bar: string; dot: string; text: string; soft: string }
 > = {
   red: {
-    label: "Borrador incompleto",
+    label: "Borrador",
     sub: "Faltan campos obligatorios",
     bar: "bg-red-500",
     dot: "bg-red-500",
@@ -191,16 +194,16 @@ export const STATUS_META: Record<
     soft: "bg-red-50 text-red-600",
   },
   orange: {
-    label: "Utilizable (interno)",
-    sub: "Mínimos completos",
+    label: "Documentación esencial",
+    sub: "Mínimos obligatorios completos",
     bar: "bg-amber-500",
     dot: "bg-amber-500",
     text: "text-amber-600",
     soft: "bg-amber-50 text-amber-600",
   },
   green: {
-    label: "Completo (CARE-ready)",
-    sub: "Listo para exportar",
+    label: "CARE completo",
+    sub: "Documentación completa según CARE",
     bar: "bg-emerald-500",
     dot: "bg-emerald-500",
     text: "text-emerald-600",

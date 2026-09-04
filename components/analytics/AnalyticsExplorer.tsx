@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -80,7 +80,14 @@ function Select({
 }
 
 export function AnalyticsExplorer() {
-  const cases = useCasesStore((s) => s.cases);
+  // La analítica se calcula sobre la biblioteca (casos publicados), no sobre
+  // los borradores privados de cada profesional.
+  const cases = useCasesStore((s) => s.library);
+  const loadLibrary = useCasesStore((s) => s.loadLibrary);
+
+  useEffect(() => {
+    void loadLibrary();
+  }, [loadLibrary]);
   const indexes = useMemo(() => cases.map(deriveLibraryIndex), [cases]);
   const kpis = useMemo(() => summaryKpis(indexes), [indexes]);
 

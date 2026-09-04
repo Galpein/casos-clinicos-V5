@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCasesStore } from "@/stores/cases.store";
 import { deriveLibraryIndex } from "@/lib/library-index";
 import { CaseSummaryCard } from "@/components/CaseSummaryCard";
@@ -42,7 +42,12 @@ function Select({
 }
 
 export default function BibliotecaPage() {
-  const cases = useCasesStore((s) => s.cases);
+  const cases = useCasesStore((s) => s.library);
+  const loadLibrary = useCasesStore((s) => s.loadLibrary);
+
+  useEffect(() => {
+    void loadLibrary();
+  }, [loadLibrary]);
   const [query, setQuery] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
   const [specialty, setSpecialty] = useState("");

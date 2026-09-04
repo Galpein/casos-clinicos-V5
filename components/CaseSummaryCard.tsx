@@ -9,9 +9,11 @@ import { CompletenessBar, StatusBadge } from "@/components/case/CompletenessBar"
 interface Props {
   caso: ClinicalCase;
   href?: string;
+  /** Acciones sobre el caso (editar, eliminar). Se pintan fuera del enlace. */
+  actions?: React.ReactNode;
 }
 
-export function CaseSummaryCard({ caso, href }: Props) {
+export function CaseSummaryCard({ caso, href, actions }: Props) {
   const meta = conditionMeta(caso);
   const { Icon } = meta;
   const status = computeCaseStatus(caso);
@@ -20,6 +22,10 @@ export function CaseSummaryCard({ caso, href }: Props) {
     : caso.complementary.keywords;
 
   return (
+    <div className="relative">
+      {actions && (
+        <div className="absolute right-3 top-3 z-10 flex gap-1">{actions}</div>
+      )}
     <Link href={href ?? `/cases/${caso.caseId}`} className="group block">
       <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
         {/* Barra superior coloreada por patología */}
@@ -102,5 +108,6 @@ export function CaseSummaryCard({ caso, href }: Props) {
         </div>
       </div>
     </Link>
+    </div>
   );
 }

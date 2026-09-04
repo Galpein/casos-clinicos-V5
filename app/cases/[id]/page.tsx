@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import type { ClinicalCase } from "@/types/clinical-case";
 import { useCasesStore } from "@/stores/cases.store";
 import { computeCaseStatus } from "@/lib/case-status";
 import { deriveLibraryIndex } from "@/lib/library-index";
@@ -22,12 +24,29 @@ function Pill({ children }: { children: React.ReactNode }) {
 export default function CaseDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
-  const caso = useCasesStore((s) => s.cases.find((c) => c.caseId === id));
+  const enCache = useCasesStore((s) => s.getCase(id));
+  const [remoto, setRemoto] = useState<ClinicalCase | null>(null);
+  const [buscando, setBuscando] = useState(false);
+
+  // Un caso abierto por enlace directo (o tras recargar) no está en la caché:
+  // se pide al servidor en vez de decir que no existe.
+  useEffect(() => {
+    if (enCache || remoto) return;
+    setBuscando(true);
+    fetch(`/api/cases/${encodeURIComponent(id)}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setRemoto(d?.caso ?? null))
+      .finally(() => setBuscando(false));
+  }, [id, enCache, remoto]);
+
+  const caso = enCache ?? remoto;
 
   if (!caso) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50">
-        <p className="text-sm text-slate-500">Caso no encontrado en esta sesión.</p>
+        <p className="text-sm text-slate-500">
+          {buscando ? "Cargando el caso…" : "Este caso no existe o se ha eliminado."}
+        </p>
         <Link href="/cases" className="text-sm font-medium text-blue-600 hover:underline">
           ← Volver a casos clínicos
         </Link>
@@ -65,6 +84,12 @@ export default function CaseDetailPage() {
             <p className="mt-1 text-sm text-slate-500">Creado el {formatDate(caso.createdAt)}</p>
           </div>
           <div className="hidden gap-2 sm:flex">
+            <Link
+              href={`/create-case?id=${encodeURIComponent(caso.caseId)}`}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600"
+            >
+              Editar
+            </Link>
             <button
               onClick={() => printCase(caso)}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"

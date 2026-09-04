@@ -41,6 +41,8 @@ interface CreationState {
   validateAll: () => void;
   applyExample: () => void;
   reset: () => void;
+  /** Carga un caso ya guardado para seguir editándolo con el asistente. */
+  loadCase: (c: ClinicalCase) => void;
 }
 
 function normalize(c: ClinicalCase): ClinicalCase {
@@ -140,6 +142,26 @@ export const useCreationStore = create<CreationState>((set, get) => ({
 
   applyExample: () => {
     get().sendUserText(EXAMPLE_INPUT);
+  },
+
+  loadCase: (c) => {
+    mid = 0;
+    set({
+      caso: c,
+      messages: [
+        {
+          id: newId(),
+          role: "assistant",
+          text:
+            `Sigues editando **${c.title || "un caso sin título"}**. ` +
+            "Cuéntame qué quieres añadir o corregir y lo aplico al documento.",
+        },
+      ],
+      proposals: undefined,
+      highlight: undefined,
+      pendingField: undefined,
+      thinking: false,
+    });
   },
 
   reset: () => {

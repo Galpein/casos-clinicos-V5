@@ -13,9 +13,18 @@ import type { ClinicalCase } from "@/types/clinical-case";
 import { emptyField } from "@/types/field";
 import { computeCaseStatus } from "./case-status";
 
-let counter = 124;
+/**
+ * Identificador de caso.
+ *
+ * Antes era un contador que arrancaba en 124 en cada carga de la página: con
+ * los casos en memoria era inofensivo, pero con base de datos dos sesiones
+ * distintas generaban el mismo identificador y la segunda sobrescribía a la
+ * primera. Ahora se compone del instante de creación más un sufijo aleatorio.
+ */
 export function nextCaseId(): string {
-  return `CASE-${String(counter++).padStart(6, "0")}`;
+  const t = Date.now().toString(36).toUpperCase().slice(-6);
+  const r = Math.random().toString(36).toUpperCase().slice(2, 4);
+  return `CASE-${t}${r}`;
 }
 
 export function blankCase(

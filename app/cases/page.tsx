@@ -1,14 +1,39 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useCasesStore } from "@/stores/cases.store";
 import { CURRENT_HCP } from "@/mock/user";
 import { CaseSummaryCard } from "@/components/CaseSummaryCard";
 import { computeCaseStatus, STATUS_META } from "@/lib/case-status";
-import type { CaseStatusColor } from "@/types/clinical-case";
+import type { CaseStatusColor, ClinicalCase } from "@/types/clinical-case";
 
 export default function CasesPage() {
   const cases = useCasesStore((s) => s.cases);
+  const loadMine = useCasesStore((s) => s.loadMine);
+  const removeCase = useCasesStore((s) => s.removeCase);
+  const loading = useCasesStore((s) => s.loading);
+  const loaded = useCasesStore((s) => s.loaded);
+  const [aBorrar, setABorrar] = useState<ClinicalCase | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  useEffect(() => {
+    void loadMine();
+  }, [loadMine]);
+
+  const confirmarBorrado = async () => {
+    if (!aBorrar) return;
+    const result = await removeCase(aBorrar.caseId);
+    setABorrar(null);
+    setAviso(
+      result === "kept_in_library"
+        ? "Retirado de tus casos. Como ya estaba en la biblioteca, la entrada sigue disponible allí."
+        : result === "deleted"
+          ? "Borrador eliminado."
+          : "No se ha podido eliminar el caso.",
+    );
+    setTimeout(() => setAviso(null), 6000);
+  };
 
   const counts: Record<CaseStatusColor, number> = { red: 0, orange: 0, green: 0 };
   for (const c of cases) counts[computeCaseStatus(c).color]++;
@@ -71,11 +96,80 @@ export default function CasesPage() {
 
       {/* Grid de casos */}
       <div className="p-8">
+        {loading && !loaded && (
+          <p className="text-sm text-slate-400">Cargando tus casos…</p>
+        )}
+        {loaded && cases.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <p className="text-sm text-slate-500">Todavía no tienes ningún caso.</p>
+            <Link
+              href="/create-case"
+              className="mt-3 inline-block rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Crear el primero
+            </Link>
+          </div>
+        )}
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {cases.map((caso) => (
-            <CaseSummaryCard key={caso.caseId} caso={caso} />
+            <CaseSummaryCard
+              key={caso.caseId}
+              caso={caso}
+              actions={
+                <>
+                  <Link
+                    href={`/create-case?id=${encodeURIComponent(caso.caseId)}`}
+                    title="Seguir editando este caso"
+                    className="rounded-lg border border-slate-200 bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur transition-colors hover:border-blue-300 hover:text-blue-600"
+                  >
+                    Editar
+                  </Link>
+                  <button
+                    onClick={() => setABorrar(caso)}
+                    title="Eliminar este caso"
+                    className="rounded-lg border border-slate-200 bg-white/90 px-2 py-1 text-[11px] font-semibold text-slate-500 shadow-sm backdrop-blur transition-colors hover:border-red-300 hover:text-red-600"
+                  >
+                    Eliminar
+                  </button>
+                </>
+              }
+            />
           ))}
         </div>
+
+        {aviso && (
+          <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm text-white shadow-lg">
+            {aviso}
+          </div>
+        )}
+
+        {aBorrar && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+              <h2 className="text-lg font-bold text-slate-900">¿Eliminar este caso?</h2>
+              <p className="mt-2 text-sm text-slate-600">{aBorrar.title || aBorrar.caseId}</p>
+              <p className="mt-3 text-sm text-slate-500">
+                {computeCaseStatus(aBorrar).color === "red"
+                  ? "Es un borrador y no está en la biblioteca: se elimina definitivamente."
+                  : "Este caso ya está en la biblioteca. Desaparecerá de tus casos, pero la entrada de biblioteca se conserva."}
+              </p>
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  onClick={() => setABorrar(null)}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarBorrado}
+                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

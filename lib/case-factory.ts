@@ -85,3 +85,31 @@ export function withComputedStatus(c: ClinicalCase): ClinicalCase {
   const { color, status } = computeCaseStatus(c);
   return { ...c, status, statusColor: color };
 }
+
+/**
+ * Completa un caso parcial con la estructura de un caso en blanco.
+ *
+ * El autoguardado envía lo que hay en pantalla en cada momento, que puede ser
+ * un caso al que le faltan bloques enteros. En vez de rechazarlo (y perder lo
+ * que el médico acaba de escribir), se rellenan los huecos con los valores
+ * vacíos del caso en blanco.
+ */
+export function hydrateCase(partial: Partial<ClinicalCase>): ClinicalCase {
+  const base = blankCase(partial.authorId, partial.authorRole);
+  return {
+    ...base,
+    ...partial,
+    caseId: partial.caseId ?? base.caseId,
+    patient: { ...base.patient, ...partial.patient },
+    primaryDiagnosis: { ...base.primaryDiagnosis, ...partial.primaryDiagnosis },
+    diagnosticAssessment: { ...base.diagnosticAssessment, ...partial.diagnosticAssessment },
+    privacy: { ...base.privacy, ...partial.privacy },
+    complementary: { ...base.complementary, ...partial.complementary },
+    timeline: partial.timeline ?? base.timeline,
+    management: partial.management ?? base.management,
+    followUp: partial.followUp ?? base.followUp,
+    specialty: partial.specialty ?? base.specialty,
+    caseType: partial.caseType ?? base.caseType,
+    searchTags: partial.searchTags ?? base.searchTags,
+  };
+}

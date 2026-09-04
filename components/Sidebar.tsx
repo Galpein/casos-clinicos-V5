@@ -10,7 +10,7 @@ interface NavItem { href: string; label: string; icon: string; roles: string[]; 
 
 const NAV: NavItem[] = [
   { href: "/cases",       label: "Casos clínicos",   icon: "🗂️",  roles: ["profesional_sanitario"] },
-  { href: "/create-case", label: "Crear caso",        icon: "✚",   roles: ["profesional_sanitario"] },
+  { href: "/create-case", label: "Nuevo caso",        icon: "✚",   roles: ["profesional_sanitario"] },
   { href: "/biblioteca",  label: "Biblioteca",        icon: "📚",  roles: ["profesional_sanitario"] },
   { href: "/analytics",   label: "Analytics",         icon: "📊",  roles: ["cliente"] },
 ];

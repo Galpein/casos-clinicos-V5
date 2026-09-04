@@ -30,8 +30,7 @@ function FieldStateChip({ field }: { field: FieldValue<unknown> }) {
   if (isPendingReview(field)) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 ring-1 ring-amber-200">
-        <SparkIcon /> Propuesto IA
-        {field.confidence != null && ` · ${Math.round(field.confidence * 100)}%`}
+        <SparkIcon /> Propuesto por IA
       </span>
     );
   }
@@ -123,6 +122,10 @@ function isFilled(field: FieldValue<unknown>): boolean {
 
 // ── Sub-render: diagnóstico, tratamientos, resultados ────────────────────────
 
+function normalized(dx: DiagnosisBlock): string | undefined {
+  return dx.concept?.normalizedLabel ?? dx.concept?.textFound;
+}
+
 function Diagnosis({ dx }: { dx: DiagnosisBlock }) {
   return (
     <div className="space-y-1.5">
@@ -133,20 +136,18 @@ function Diagnosis({ dx }: { dx: DiagnosisBlock }) {
         </p>
         <FieldStateChip field={dx.label} />
       </div>
-      {dx.concept && (
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="rounded bg-violet-50 px-1.5 py-0.5 font-medium text-violet-700">
-            {dx.concept.normalizedLabel ?? dx.concept.textFound}
-          </span>
-          <span className="text-slate-400">·</span>
-          <span className="font-mono text-slate-400">{dx.concept.conceptId}</span>
-          {dx.concept.validatedByHcp ? (
-            <span className="text-emerald-600">✓</span>
-          ) : (
-            <span className="text-amber-600">pendiente</span>
-          )}
-        </div>
-      )}
+      {/* El término normalizado sólo se muestra si difiere de lo escrito por el
+          médico: si coincide es ruido. El identificador interno del diccionario
+          no se enseña (es de indexación, no de lectura clínica). */}
+      {dx.concept &&
+        normalized(dx) &&
+        normalized(dx)!.toLowerCase() !== (dx.label.value ?? "").trim().toLowerCase() && (
+          <div className="flex items-center gap-1.5 text-[11px]">
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600">
+              Indexado como: {normalized(dx)}
+            </span>
+          </div>
+        )}
     </div>
   );
 }
@@ -167,10 +168,12 @@ function TreatmentItem({ t }: { t: Treatment }) {
         </p>
       </div>
       {t.validatedByHcp ? (
-        <span className="shrink-0 text-[11px] text-emerald-600">✓</span>
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-200">
+          <CheckIcon /> Validado
+        </span>
       ) : (
-        <span className="shrink-0 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600">
-          IA
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 ring-1 ring-amber-200">
+          <SparkIcon /> Propuesto por IA
         </span>
       )}
     </li>
@@ -225,11 +228,6 @@ export function CaseDocument({
           <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
             {ageSummary(caso.patient.ageGroup, caso.patient.ageValue.value)}
           </span>
-          {caso.patient.deIdentified && (
-            <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
-              ✓ Desidentificado
-            </span>
-          )}
         </div>
         {isFilled(caso.patient.clinicalContext) && (
           <p className="mt-1.5 text-slate-600">{caso.patient.clinicalContext.value}</p>
@@ -319,9 +317,6 @@ export function CaseDocument({
 
       <Block n={13} title="Privacidad y consentimiento" field="privacy" filled={caso.privacy.consentStatus !== "unknown"} highlighted={highlight === "privacy"}>
         <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-            {visibilityLabel[caso.privacy.visibility]}
-          </span>
           <span
             className={`rounded-md px-2 py-0.5 text-xs font-medium ${
               caso.privacy.consentStatus === "obtained" || caso.privacy.consentStatus === "not_required"

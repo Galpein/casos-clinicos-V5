@@ -10,7 +10,6 @@ import { openPresentation, printCase } from "@/lib/export/caseExport";
 import { conditionMeta } from "@/components/case/condition";
 import { CaseDocument } from "@/components/case/CaseDocument";
 import { CompletenessDetail, StatusBadge } from "@/components/case/CompletenessBar";
-import { DataInspector } from "@/components/case/DataInspector";
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
@@ -86,7 +85,6 @@ export default function CaseDetailPage() {
       <div className="grid gap-6 p-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <CaseDocument caso={caso} />
-          <DataInspector caso={caso} />
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
@@ -146,13 +144,6 @@ export default function CaseDetailPage() {
                   {index.specialty.map((s) => (
                     <Pill key={s.label}>{s.label}</Pill>
                   ))}
-                </div>
-              </div>
-              <div>
-                <p className="mb-1 text-[11px] text-slate-400">Acceso</p>
-                <div className="flex flex-wrap gap-1">
-                  <Pill>{index.access.visibility}</Pill>
-                  {index.access.deIdentified && <Pill>desidentificado</Pill>}
                 </div>
               </div>
             </div>

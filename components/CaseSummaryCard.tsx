@@ -86,7 +86,8 @@ export function CaseSummaryCard({ caso, href }: Props) {
             <CompletenessBar c={status} />
             <div className="mt-2 flex items-center justify-between">
               <span className="text-[11px] text-slate-400">
-                {status.requiredDone}/{status.requiredTotal} obligatorios
+                {status.requiredDone}/{status.requiredTotal} obligatorios ·{" "}
+                {status.complementaryDone}/{status.complementaryTotal} complementarios
               </span>
               <span className="text-[11px] font-medium text-slate-500">
                 {formatDate(caso.createdAt)}

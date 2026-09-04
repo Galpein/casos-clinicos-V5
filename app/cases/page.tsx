@@ -37,7 +37,7 @@ export default function CasesPage() {
               <div className="leading-tight">
                 <p className="text-sm font-semibold text-slate-800">{CURRENT_HCP.name}</p>
                 <p className="text-[11px] text-slate-400">
-                  {CURRENT_HCP.specialty} · Col. {CURRENT_HCP.colegiado}
+                  {CURRENT_HCP.colegiado}
                 </p>
               </div>
             </div>

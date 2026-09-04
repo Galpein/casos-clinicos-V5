@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useCreationStore } from "@/stores/creation.store";
+import { computeCaseStatus } from "@/lib/case-status";
 
 function MiniMd({ text }: { text: string }) {
   // Soporta **negrita** y *cursiva* sencillos.
@@ -37,6 +38,11 @@ export function AssistantChat() {
     applyExample,
     reset,
   } = useCreationStore();
+
+  const caso = useCreationStore((s) => s.caso);
+  // "Ver ejemplo" carga un caso de muestra completo: si ya hay algo escrito,
+  // machacaría el trabajo del usuario. Se inhabilita hasta reiniciar.
+  const casoEmpezado = computeCaseStatus(caso).pct > 0;
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -75,8 +81,13 @@ export function AssistantChat() {
         <div className="ml-auto flex gap-1.5">
           <button
             onClick={applyExample}
-            disabled={thinking}
-            className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            disabled={thinking || casoEmpezado}
+            title={
+              casoEmpezado
+                ? "Ya has empezado un caso. Reinicia para cargar el ejemplo y no perder lo escrito."
+                : "Carga un caso de ejemplo ya redactado"
+            }
+            className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Ver ejemplo
           </button>

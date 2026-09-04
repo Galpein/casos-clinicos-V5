@@ -59,15 +59,18 @@ export function CompletenessDetail({ c }: { c: CaseCompleteness }) {
         <span className="text-sm font-bold text-slate-700">{c.pct}%</span>
       </div>
 
-      {/* Barra segmentada: obligatorios vs complementarios */}
-      <div className="mb-1 flex h-2 overflow-hidden rounded-full bg-slate-100">
+      {/* Un único relleno con el color del estado y una marca en el umbral de
+          los obligatorios: así el color significa siempre lo mismo (el semáforo)
+          y la marca dice a partir de dónde el caso deja de ser un borrador. */}
+      <div className="relative mb-1 h-2 overflow-hidden rounded-full bg-slate-100">
         <div
-          className="h-full bg-amber-400 transition-all"
-          style={{ width: `${(c.requiredDone / (c.requiredTotal + c.complementaryTotal)) * 100}%` }}
+          className={`h-full rounded-full transition-all duration-500 ${m.bar}`}
+          style={{ width: `${c.pct}%` }}
         />
         <div
-          className="h-full bg-emerald-400 transition-all"
-          style={{ width: `${(c.complementaryDone / (c.requiredTotal + c.complementaryTotal)) * 100}%` }}
+          className="absolute inset-y-0 w-px bg-slate-300"
+          style={{ left: `${(c.requiredTotal / (c.requiredTotal + c.complementaryTotal)) * 100}%` }}
+          title="A partir de aquí, los mínimos obligatorios están completos"
         />
       </div>
       <div className="flex justify-between text-[11px] text-slate-400">

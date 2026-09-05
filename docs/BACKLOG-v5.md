@@ -40,12 +40,12 @@ Notación: `[ ]` pendiente · `[?]` bloqueado por una decisión · `[—]` fuera
 
 > `stores/cases.store.ts` sólo tiene `addCase` y `getCase`. Todo esto es nuevo.
 
-- [?] **3.1** **Autoguardado**: en cuanto haya un campo, el caso existe como borrador en «Casos clínicos». Depende de **D2**.
-- [?] **3.2** **Editar** un caso ya guardado, esté completo o no, desde la lista y desde el detalle.
-- [?] **3.3** **Eliminar** cualquier caso. Matiz de Enrique: los completos/utilizables se borran de la pantalla del médico pero **permanecen en la biblioteca**. Esto implica separar «mi copia» de «la entrada de biblioteca» → **cambio en el modelo de datos**.
-- [?] **3.4** Publicación automática en biblioteca al alcanzar naranja, y **re-sincronización** al editar después.
-- [ ] **3.5** Guardar sin bloqueo: hoy `canSave` exige salir de rojo. Pasar a permitir guardar con un solo campo; si falta el título, pedirlo en ese momento.
-- [ ] **3.6** «Reiniciar» deja de destruir: se convierte en «empezar otro caso», conservando el borrador anterior en la lista.
+- [x] **3.1** **Autoguardado**: el caso existe como borrador en cuanto hay un campo. Tope de 5 s para que el asistente no aplace el guardado.
+- [x] **3.2** **Editar** un caso guardado desde la lista y desde el detalle: se abre en el asistente (`/create-case?id=`).
+- [x] **3.3** **Eliminar** con confirmación que explica el efecto real: el borrador se destruye, el publicado se retira de la vista del autor y permanece en la biblioteca.
+- [x] **3.4** Publicación automática al dejar de ser borrador (`in_library` no revierte) y re-sincronización del índice en cada guardado.
+- [x] **3.5** Guardar sin bloqueo; si falta el título se pide en ese momento.
+- [~] **3.6** «Reiniciar»: ya no pierde nada porque el borrador está autoguardado y queda en «Casos clínicos». Falta decírselo al usuario al pulsarlo, que hoy no avisa.
 
 ## 4. Asistente de creación
 
@@ -66,9 +66,9 @@ Notación: `[ ]` pendiente · `[?]` bloqueado por una decisión · `[—]` fuera
 
 **Conceptos nuevos que introducen los mockups y que hoy no existen en el modelo:** nivel documental, colecciones, casos guardados, comparar dos casos, reto clínico, fototipo, actividad y contadores por faceta. Cada uno es trabajo aparte; hay que decidir cuáles entran.
 
-- [ ] **5.1** Vista de biblioteca propia siguiendo esas referencias. Por fases: (a) lista con facetas y panel de detalle, (b) modo tabla, (c) portada de exploración.
-- [ ] **5.2** Excluir los borradores: sólo entran completos y utilizables.
-- [?] **5.3** Terminología de los estados en la biblioteca → **D3**.
+- [x] **5.1** Vista de biblioteca propia: (a) facetas con contadores y panel de detalle ✔, (b) tabla ordenable con fila expandible ✔, (c) barra de exploración por especialidad y reto clínico ✔ — sin colecciones ni actividad, que son modelo nuevo.
+- [x] **5.2** Excluir los borradores de la biblioteca.
+- [x] **5.3** Terminología aplicada: Borrador · Documentación esencial · CARE completo.
 
 ## 6. Exportación
 

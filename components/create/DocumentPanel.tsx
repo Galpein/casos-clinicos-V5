@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 import { useCreationStore } from "@/stores/creation.store";
 import { computeCaseStatus } from "@/lib/case-status";
-import { CaseDocument } from "@/components/case/CaseDocument";
+import { CaseDocument, ValidateContext } from "@/components/case/CaseDocument";
 import { CompletenessDetail, StatusBadge } from "@/components/case/CompletenessBar";
 
 export function DocumentPanel() {
   const { caso, highlight } = useCreationStore();
+  const validateField = useCreationStore((s) => s.validateField);
   const status = computeCaseStatus(caso);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +43,9 @@ export function DocumentPanel() {
 
       {/* Documento en vivo */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-slate-50/60 p-5">
-        <CaseDocument caso={caso} highlight={highlight} />
+        <ValidateContext.Provider value={validateField}>
+          <CaseDocument caso={caso} highlight={highlight} />
+        </ValidateContext.Provider>
         <div className="h-24" />
       </div>
     </div>

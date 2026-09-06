@@ -37,7 +37,10 @@ export function AssistantChat() {
     validateAll,
     applyExample,
     reset,
+    undo,
+    canUndo,
   } = useCreationStore();
+  const [confirmarReinicio, setConfirmarReinicio] = useState(false);
 
   const caso = useCreationStore((s) => s.caso);
   // "Ver ejemplo" carga un caso de muestra completo: si ya hay algo escrito,
@@ -72,6 +75,34 @@ export function AssistantChat() {
 
   return (
     <div className="flex h-full flex-col">
+      {confirmarReinicio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-slate-900">¿Empezar un caso nuevo?</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              El caso que tienes ahora <strong>no se pierde</strong>: está guardado y lo
+              tienes en «Casos clínicos» para seguir editándolo cuando quieras.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmarReinicio(false)}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-50"
+              >
+                Seguir con éste
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmarReinicio(false);
+                  reset();
+                }}
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              >
+                Empezar uno nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Acciones rápidas */}
       <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 text-sm">
@@ -92,7 +123,19 @@ export function AssistantChat() {
             Ver ejemplo
           </button>
           <button
-            onClick={reset}
+            onClick={undo}
+            disabled={!canUndo || thinking}
+            title={
+              canUndo
+                ? "Deshacer el último cambio del documento"
+                : "Todavía no hay nada que deshacer"
+            }
+            className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ↶ Deshacer
+          </button>
+          <button
+            onClick={() => (casoEmpezado ? setConfirmarReinicio(true) : reset())}
             className="rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-50"
           >
             Reiniciar

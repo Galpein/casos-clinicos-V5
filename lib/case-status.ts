@@ -61,7 +61,7 @@ function requiredChecks(c: ClinicalCase): CompletenessCheck[] {
     req("specialty", "Especialidad", c.specialty.length > 0),
     req(
       "patient",
-      "Paciente desidentificado",
+      "Paciente anonimizado",
       c.patient.deIdentified && c.patient.sex !== "unknown",
     ),
     // Tratamiento/intervención: basta con que exista una entrada con estado
@@ -109,17 +109,17 @@ function complementaryChecks(c: ClinicalCase): CompletenessCheck[] {
     ),
     comp(
       "dx_validated",
-      "Diagnóstico validado por HCP",
+      "Diagnóstico validado por ti",
       !!c.primaryDiagnosis.concept?.validatedByHcp,
     ),
     comp(
       "tx_validated",
-      "Tratamiento validado por HCP",
+      "Tratamiento validado por ti",
       c.management.some((t) => t.validatedByHcp),
     ),
     comp(
       "outcome_validated",
-      "Resultado validado por HCP",
+      "Resultado validado por ti",
       c.followUp.some((o) => o.validatedByHcp),
     ),
     comp("tags", "Palabras clave", c.searchTags.length > 0),

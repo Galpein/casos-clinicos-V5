@@ -13,7 +13,9 @@ import type {
   Treatment,
   Outcome,
 } from "@/types/clinical-case";
+import { createContext, useContext } from "react";
 import type { FieldValue } from "@/types/field";
+import { Hint } from "@/components/ui/Hint";
 import { hasContent, isPendingReview } from "@/types/field";
 import {
   ageSummary,
@@ -26,19 +28,49 @@ import {
 
 // ── Chips de estado de campo ─────────────────────────────────────────────────
 
-function FieldStateChip({ field }: { field: FieldValue<unknown> }) {
+/**
+ * Acción de validar un campo suelto. La inyecta la pantalla de redacción; el
+ * detalle del caso es de sólo lectura y no la pasa, así que allí los chips
+ * son informativos.
+ */
+const ValidateContext = createContext<((path: string) => void) | null>(null);
+
+export const PROPUESTO_HINT =
+  "Lo ha rellenado el asistente a partir de lo que has contado. Queda como propuesta hasta que lo confirmes.";
+export const VALIDADO_HINT =
+  "Lo has confirmado tú. Los campos validados son los que cuentan para el nivel documental del caso.";
+
+function FieldStateChip({ field, path }: { field: FieldValue<unknown>; path?: string }) {
+  const validate = useContext(ValidateContext);
+
   if (isPendingReview(field)) {
-    return (
+    const chip = (
       <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 ring-1 ring-amber-200">
         <SparkIcon /> Propuesto por IA
       </span>
     );
+    if (!validate || !path) return <Hint text={PROPUESTO_HINT}>{chip}</Hint>;
+    return (
+      <span className="flex shrink-0 items-center gap-1.5">
+        <Hint text={PROPUESTO_HINT}>{chip}</Hint>
+        <button
+          onClick={() => validate(path)}
+          title="Dar por bueno este campo"
+          className="rounded-full border border-emerald-200 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 transition-colors hover:bg-emerald-50"
+        >
+          Validar
+        </button>
+      </span>
+    );
   }
+
   if (field.status === "present" && field.validatedByHcp) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-200">
-        <CheckIcon /> Validado
-      </span>
+      <Hint text={VALIDADO_HINT}>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-200">
+          <CheckIcon /> Validado
+        </span>
+      </Hint>
     );
   }
   return null;
@@ -102,7 +134,7 @@ function Block({
   );
 }
 
-function Text({ field, placeholder }: { field: FieldValue<string>; placeholder: string }) {
+function Text({ field, placeholder, path }: { field: FieldValue<string>; placeholder: string; path?: string }) {
   const has = hasContent(field);
   return (
     <div>
@@ -110,7 +142,7 @@ function Text({ field, placeholder }: { field: FieldValue<string>; placeholder: 
         <p className={has ? "text-slate-700" : "italic text-slate-400"}>
           {has ? field.value : placeholder}
         </p>
-        <FieldStateChip field={field} />
+        <FieldStateChip field={field} path={path} />
       </div>
     </div>
   );
@@ -134,7 +166,7 @@ function Diagnosis({ dx }: { dx: DiagnosisBlock }) {
           {dx.label.value ?? <span className="italic text-slate-400">Sin diagnóstico</span>}
           {dx.isSuspected && <span className="ml-1 text-xs text-amber-600">(sospecha)</span>}
         </p>
-        <FieldStateChip field={dx.label} />
+        <FieldStateChip field={dx.label} path="diagnosis" />
       </div>
       {/* El término normalizado sólo se muestra si difiere de lo escrito por el
           médico: si coincide es ruido. El identificador interno del diccionario
@@ -152,7 +184,8 @@ function Diagnosis({ dx }: { dx: DiagnosisBlock }) {
   );
 }
 
-function TreatmentItem({ t }: { t: Treatment }) {
+function TreatmentItem({ t, path }: { t: Treatment; path?: string }) {
+  const validate = useContext(ValidateContext);
   return (
     <li className="flex items-start justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2">
       <div>
@@ -168,12 +201,26 @@ function TreatmentItem({ t }: { t: Treatment }) {
         </p>
       </div>
       {t.validatedByHcp ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-200">
-          <CheckIcon /> Validado
-        </span>
+        <Hint text={VALIDADO_HINT}>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 ring-1 ring-emerald-200">
+            <CheckIcon /> Validado
+          </span>
+        </Hint>
       ) : (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 ring-1 ring-amber-200">
-          <SparkIcon /> Propuesto por IA
+        <span className="flex shrink-0 items-center gap-1.5">
+          <Hint text={PROPUESTO_HINT}>
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 ring-1 ring-amber-200">
+              <SparkIcon /> Propuesto por IA
+            </span>
+          </Hint>
+          {validate && path && (
+            <button
+              onClick={() => validate(path)}
+              className="rounded-full border border-emerald-200 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 transition-colors hover:bg-emerald-50"
+            >
+              Validar
+            </button>
+          )}
         </span>
       )}
     </li>
@@ -195,6 +242,8 @@ function OutcomeItem({ o }: { o: Outcome }) {
 
 // ── Documento completo ───────────────────────────────────────────────────────
 
+export { ValidateContext };
+
 export function CaseDocument({
   caso,
   highlight,
@@ -211,7 +260,7 @@ export function CaseDocument({
       </Block>
 
       <Block n={2} title="Resumen breve" field="summary" filled={isFilled(caso.summary)} highlighted={highlight === "summary"}>
-        <Text field={caso.summary} placeholder="Resumen del caso en 1-2 frases" />
+        <Text field={caso.summary} placeholder="Resumen del caso en 1-2 frases" path="summary" />
       </Block>
 
       <Block
@@ -235,15 +284,15 @@ export function CaseDocument({
       </Block>
 
       <Block n={4} title="Motivo principal" field="mainReason" filled={isFilled(caso.mainReason)} highlighted={highlight === "mainReason"}>
-        <Text field={caso.mainReason} placeholder="Por qué este caso es relevante" />
+        <Text field={caso.mainReason} placeholder="Por qué este caso es relevante" path="mainReason" />
       </Block>
 
       <Block n={5} title="Antecedentes" field="background" filled={isFilled(caso.background)} highlighted={highlight === "background"}>
-        <Text field={caso.background} placeholder="Antecedentes relevantes" />
+        <Text field={caso.background} placeholder="Antecedentes relevantes" path="background" />
       </Block>
 
       <Block n={6} title="Hallazgos clínicos" field="keyFindings" filled={isFilled(caso.keyFindings)} highlighted={highlight === "keyFindings"}>
-        <Text field={caso.keyFindings} placeholder="Hallazgos clave de la exploración" />
+        <Text field={caso.keyFindings} placeholder="Hallazgos clave de la exploración" path="keyFindings" />
       </Block>
 
       <Block n={7} title="Timeline" field="timeline" filled={caso.timeline.length > 0} highlighted={highlight === "timeline"}>
@@ -272,7 +321,7 @@ export function CaseDocument({
         filled={isFilled(caso.diagnosticAssessment.testsPerformed)}
         highlighted={highlight === "assessment"}
       >
-        <Text field={caso.diagnosticAssessment.testsPerformed} placeholder="Pruebas realizadas" />
+        <Text field={caso.diagnosticAssessment.testsPerformed} placeholder="Pruebas realizadas" path="assessment.tests" />
         {isFilled(caso.diagnosticAssessment.reasoning) && (
           <p className="mt-1.5 text-slate-600">{caso.diagnosticAssessment.reasoning.value}</p>
         )}
@@ -293,7 +342,7 @@ export function CaseDocument({
         ) : (
           <ul className="space-y-1.5">
             {caso.management.map((t, i) => (
-              <TreatmentItem key={i} t={t} />
+              <TreatmentItem key={i} t={t} path={`management.${i}`} />
             ))}
           </ul>
         )}
@@ -312,7 +361,7 @@ export function CaseDocument({
       </Block>
 
       <Block n={12} title="Aprendizaje principal" field="keyLearning" filled={isFilled(caso.keyLearning)} highlighted={highlight === "keyLearning"}>
-        <Text field={caso.keyLearning} placeholder="La lección clave del caso" />
+        <Text field={caso.keyLearning} placeholder="La lección clave del caso" path="keyLearning" />
       </Block>
 
       <Block n={13} title="Privacidad y consentimiento" field="privacy" filled={caso.privacy.consentStatus !== "unknown"} highlighted={highlight === "privacy"}>

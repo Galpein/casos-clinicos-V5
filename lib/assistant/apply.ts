@@ -238,3 +238,82 @@ export function validateAll(c: ClinicalCase): ClinicalCase {
     timeline: c.timeline.map((e) => ({ ...e, validatedByHcp: true })),
   });
 }
+
+/**
+ * Valida un único campo, en vez de todo el caso de golpe.
+ *
+ * Enrique pedía poder confirmar campo a campo lo que propone la IA. Las rutas
+ * son las que usa el documento para identificar cada bloque.
+ */
+export function validateField(c: ClinicalCase, path: string): ClinicalCase {
+  const v = <T,>(f: FieldValue<T>): FieldValue<T> =>
+    f.status === "pending_review" ? { ...f, status: "present", validatedByHcp: true } : f;
+
+  const [head, tail] = path.split(".");
+
+  switch (head) {
+    case "summary":
+    case "mainReason":
+    case "background":
+    case "keyFindings":
+    case "keyLearning":
+      return withComputedStatus({ ...c, [head]: v(c[head]) });
+
+    case "patient":
+      return withComputedStatus({
+        ...c,
+        patient: { ...c.patient, clinicalContext: v(c.patient.clinicalContext) },
+      });
+
+    case "assessment":
+      return withComputedStatus({
+        ...c,
+        diagnosticAssessment: {
+          ...c.diagnosticAssessment,
+          testsPerformed:
+            tail === "reasoning" ? c.diagnosticAssessment.testsPerformed : v(c.diagnosticAssessment.testsPerformed),
+          reasoning:
+            tail === "reasoning" ? v(c.diagnosticAssessment.reasoning) : c.diagnosticAssessment.reasoning,
+        },
+      });
+
+    case "diagnosis":
+      return withComputedStatus({
+        ...c,
+        primaryDiagnosis: {
+          ...c.primaryDiagnosis,
+          label: v(c.primaryDiagnosis.label),
+          concept: c.primaryDiagnosis.concept
+            ? { ...c.primaryDiagnosis.concept, status: "validated", validatedByHcp: true }
+            : null,
+        },
+      });
+
+    case "management": {
+      const i = Number(tail);
+      return withComputedStatus({
+        ...c,
+        management: c.management.map((t, n) =>
+          n === i
+            ? {
+                ...t,
+                validatedByHcp: true,
+                concept: t.concept ? { ...t.concept, status: "validated" as const, validatedByHcp: true } : t.concept,
+              }
+            : t,
+        ),
+      });
+    }
+
+    case "followUp": {
+      const i = Number(tail);
+      return withComputedStatus({
+        ...c,
+        followUp: c.followUp.map((o, n) => (n === i ? { ...o, validatedByHcp: true } : o)),
+      });
+    }
+
+    default:
+      return c;
+  }
+}

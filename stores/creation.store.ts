@@ -9,6 +9,7 @@ import {
   aiTreatment,
   setTimeline,
   validateAll as validateAllPatch,
+  validateField as validateFieldPatch,
 } from "@/lib/assistant/apply";
 import {
   EXAMPLE_INPUT,
@@ -35,10 +36,16 @@ interface CreationState {
   /** Campo de texto libre que el asistente está esperando (motivo, etc.). */
   pendingField?: string;
 
+  /** Instantáneas anteriores del caso, para poder deshacer. */
+  history: ClinicalCase[];
+  canUndo: boolean;
+
   sendUserText: (text: string) => void;
   pickProposal: (id: string) => void;
   skipProposal: () => void;
   validateAll: () => void;
+  validateField: (path: string) => void;
+  undo: () => void;
   applyExample: () => void;
   reset: () => void;
   /** Carga un caso ya guardado para seguir editándolo con el asistente. */
@@ -49,16 +56,22 @@ function normalize(c: ClinicalCase): ClinicalCase {
   return setCaseTypeFromContext(c);
 }
 
+/** Cuántos pasos atrás se pueden deshacer. */
+const HISTORY_MAX = 25;
+
 export const useCreationStore = create<CreationState>((set, get) => ({
   caso: blankCase(),
   messages: [{ id: newId(), role: "assistant", text: WELCOME }],
   thinking: false,
+  history: [],
+  canUndo: false,
 
   sendUserText: (text) => {
     const trimmed = text.trim();
     if (!trimmed || get().thinking) return;
 
     const pending = get().pendingField;
+    snapshot(set, get);
 
     set((s) => ({
       messages: [...s.messages, { id: newId(), role: "user", text: trimmed }],
@@ -101,6 +114,7 @@ export const useCreationStore = create<CreationState>((set, get) => ({
     const ps = get().proposals;
     const opt = ps?.options.find((o) => o.id === id);
     if (!ps || !opt) return;
+    snapshot(set, get);
 
     set((s) => ({
       caso: normalize(opt.apply(s.caso)),
@@ -127,6 +141,7 @@ export const useCreationStore = create<CreationState>((set, get) => ({
   },
 
   validateAll: () => {
+    snapshot(set, get);
     set((s) => ({
       caso: validateAllPatch(s.caso),
       messages: [
@@ -140,6 +155,29 @@ export const useCreationStore = create<CreationState>((set, get) => ({
     }));
   },
 
+  validateField: (path) => {
+    snapshot(set, get);
+    set((s) => ({ caso: validateFieldPatch(s.caso, path) }));
+  },
+
+  /** Deshace el último cambio sobre el documento. El chat no se toca. */
+  undo: () => {
+    const prev = get().history;
+    if (prev.length === 0) return;
+    const caso = prev[prev.length - 1];
+    set({
+      caso,
+      history: prev.slice(0, -1),
+      canUndo: prev.length > 1,
+      proposals: undefined,
+      highlight: undefined,
+      messages: [
+        ...get().messages,
+        { id: newId(), role: "assistant", text: "He deshecho el último cambio del documento." },
+      ],
+    });
+  },
+
   applyExample: () => {
     get().sendUserText(EXAMPLE_INPUT);
   },
@@ -147,6 +185,8 @@ export const useCreationStore = create<CreationState>((set, get) => ({
   loadCase: (c) => {
     mid = 0;
     set({
+      history: [],
+      canUndo: false,
       caso: c,
       messages: [
         {
@@ -167,6 +207,8 @@ export const useCreationStore = create<CreationState>((set, get) => ({
   reset: () => {
     mid = 0;
     set({
+      history: [],
+      canUndo: false,
       caso: blankCase(),
       messages: [{ id: newId(), role: "assistant", text: WELCOME }],
       proposals: undefined,
@@ -178,6 +220,19 @@ export const useCreationStore = create<CreationState>((set, get) => ({
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Guarda el estado actual del documento antes de modificarlo. Es lo que hace
+ * posible el "deshacer": Enrique pedía poder volver atrás de un "validar todo"
+ * o de una propuesta aceptada por error.
+ */
+function snapshot(
+  set: (partial: Partial<CreationState>) => void,
+  get: () => CreationState,
+) {
+  const history = [...get().history, get().caso].slice(-HISTORY_MAX);
+  set({ history, canUndo: true });
+}
 
 function advance(
   set: (partial: Partial<CreationState>) => void,

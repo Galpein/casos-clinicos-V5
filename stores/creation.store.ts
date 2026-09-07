@@ -16,6 +16,7 @@ import {
   nextPrompt,
   respond,
   setCaseTypeFromContext,
+  type AiHints,
 } from "@/lib/assistant/engine";
 import type { ChatMessage, ProposalSet } from "@/lib/assistant/types";
 
@@ -80,34 +81,22 @@ export const useCreationStore = create<CreationState>((set, get) => ({
       pendingField: undefined,
     }));
 
-    const turn = respond(get().caso, trimmed, pending);
-
-    // Mensaje del asistente tras un breve "pensando".
-    setTimeout(() => {
-      set((s) => ({
-        messages: [
-          ...s.messages,
-          { id: newId(), role: "assistant", text: turn.message, applied: turn.patches.map((p) => p.summary) },
-        ],
-      }));
-
-      // Relleno en vivo: aplica los parches uno a uno con stagger.
-      turn.patches.forEach((patch, i) => {
-        setTimeout(() => {
-          set((s) => ({ caso: normalize(patch.apply(s.caso)), highlight: patch.field }));
-        }, 350 + i * 420);
-      });
-
-      const settle = 350 + turn.patches.length * 420 + 200;
-      setTimeout(() => {
-        set({
-          proposals: turn.proposals,
-          highlight: turn.highlight,
-          pendingField: turn.expectsText,
-          thinking: false,
+    // La IA sólo extrae entidades; si no está configurada o falla, el motor
+    // propio hace su trabajo igual. El asistente nunca se queda mudo.
+    void (async () => {
+      let ai: AiHints | null = null;
+      try {
+        const res = await fetch("/api/assistant/extract", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text: trimmed }),
         });
-      }, settle);
-    }, 450);
+        if (res.ok) ai = (await res.json()).entidades ?? null;
+      } catch {
+        ai = null;
+      }
+      aplicarTurno(set, get, trimmed, pending, ai);
+    })();
   },
 
   pickProposal: (id) => {
@@ -220,6 +209,53 @@ export const useCreationStore = create<CreationState>((set, get) => ({
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Aplica un turno del asistente al documento: mensaje, parches escalonados y
+ * el estado siguiente. Se separó de la acción del store cuando la extracción
+ * pasó a ser asíncrona (la IA vive en el servidor).
+ */
+type SetState = (
+  partial: Partial<CreationState> | ((s: CreationState) => Partial<CreationState>),
+) => void;
+
+function aplicarTurno(
+  set: SetState,
+  get: () => CreationState,
+  texto: string,
+  pending: string | undefined,
+  ai: AiHints | null,
+) {
+    const turn = respond(get().caso, texto, pending, ai);
+
+    // Mensaje del asistente tras un breve "pensando".
+    setTimeout(() => {
+      set((s) => ({
+        messages: [
+          ...s.messages,
+          { id: newId(), role: "assistant", text: turn.message, applied: turn.patches.map((p) => p.summary) },
+        ],
+      }));
+
+      // Relleno en vivo: aplica los parches uno a uno con stagger.
+      turn.patches.forEach((patch, i) => {
+        setTimeout(() => {
+          set((s) => ({ caso: normalize(patch.apply(s.caso)), highlight: patch.field }));
+        }, 350 + i * 420);
+      });
+
+      const settle = 350 + turn.patches.length * 420 + 200;
+      setTimeout(() => {
+        set({
+          proposals: turn.proposals,
+          highlight: turn.highlight,
+          pendingField: turn.expectsText,
+          thinking: false,
+        });
+      }, settle);
+    }, 450);
+}
+
 
 /**
  * Guarda el estado actual del documento antes de modificarlo. Es lo que hace

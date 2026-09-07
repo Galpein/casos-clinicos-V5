@@ -97,10 +97,28 @@ const FREE_TEXT: Record<
 
 // ── Turno principal: el usuario escribe / pega un caso ───────────────────────
 
+/**
+ * Entidades que puede aportar la IA. Son sugerencias en bruto: los términos se
+ * resuelven igualmente contra el diccionario, y lo que no encaje entra como
+ * texto propuesto. El vocabulario lo pone la casa, no el modelo.
+ */
+export interface AiHints {
+  age: number | null;
+  sex: "female" | "male" | "other" | null;
+  diagnosis: string | null;
+  treatments: string[];
+  findings: string | null;
+  outcome: string | null;
+  specialty: string | null;
+  timeline: { when: string; event: string }[];
+  tags: string[];
+}
+
 export function respond(
   caso: ClinicalCase,
   userText: string,
   pendingField?: string,
+  ai?: AiHints | null,
 ): AssistantTurn {
   const patches: CasePatch[] = [];
   const understood: string[] = [];
@@ -118,9 +136,10 @@ export function respond(
     highlight = ft.block || undefined;
   }
 
-  // 1) Paciente (edad / sexo)
-  const age = extractAge(userText);
-  const sex = extractSex(userText);
+  // 1) Paciente (edad / sexo). Lo que diga la IA manda sobre el patrón de
+  // texto, porque entiende construcciones que la expresión regular no ve.
+  const age = ai?.age ?? extractAge(userText);
+  const sex = ai?.sex ?? extractSex(userText);
   if ((age != null && caso.patient.ageValue.value == null) || (sex && caso.patient.sex === "unknown")) {
     patches.push({
       field: "patient",
@@ -131,8 +150,16 @@ export function respond(
     highlight ??= "patient";
   }
 
-  // 2) Diagnóstico (con normalización del término)
-  const dxs = pendingField === "diagnosis" ? [] : extractConcepts(userText, "diagnosis");
+  // 2) Diagnóstico. Se busca en el texto y, si la IA propuso uno, también
+  // sobre su propuesta: así "meduloblastoma" entra aunque el diccionario no lo
+  // conozca, en vez de perderse.
+  const dxs =
+    pendingField === "diagnosis"
+      ? []
+      : [
+          ...extractConcepts(userText, "diagnosis"),
+          ...(ai?.diagnosis ? extractConcepts(ai.diagnosis, "diagnosis") : []),
+        ];
   if (dxs.length && !caso.primaryDiagnosis.concept) {
     const dx = dxs[0];
     patches.push({
@@ -155,8 +182,25 @@ export function respond(
     }
   }
 
+  // 2 bis) La IA vio un diagnóstico que el diccionario no reconoce: se guarda
+  // como texto propuesto en vez de descartarlo. Queda marcado para que el
+  // médico lo valide y, si se repite, se añade al vocabulario.
+  if (!dxs.length && ai?.diagnosis && !caso.primaryDiagnosis.concept && pendingField !== "diagnosis") {
+    const libre = ai.diagnosis.trim();
+    patches.push({
+      field: "diagnosis",
+      summary: `Diagnóstico: ${libre}`,
+      apply: (c) => setDiagnosisFromText(c, libre),
+    });
+    understood.push(`diagnóstico ${libre.toLowerCase()} (fuera del diccionario, pendiente de validar)`);
+    highlight = "diagnosis";
+  }
+
   // 3) Tratamientos detectados
-  const drugs = extractConcepts(userText, "drug");
+  const drugs = [
+    ...extractConcepts(userText, "drug"),
+    ...(ai?.treatments ?? []).flatMap((t) => extractConcepts(t, "drug")),
+  ];
   for (const d of drugs) {
     if (caso.management.some((t) => t.concept?.conceptId === d.conceptId)) continue;
     patches.push({
@@ -168,8 +212,47 @@ export function respond(
     highlight ??= "management";
   }
 
+  // 3 bis) Tratamientos que la IA nombra y el diccionario no conoce.
+  const yaPropuestos = new Set(drugs.map((d) => d.label.toLowerCase()));
+  for (const libre of ai?.treatments ?? []) {
+    const nombre = libre.trim();
+    if (!nombre || yaPropuestos.has(nombre.toLowerCase())) continue;
+    if (extractConcepts(nombre, "drug").length) continue;
+    if (caso.management.some((t) => t.name.toLowerCase() === nombre.toLowerCase())) continue;
+    patches.push({
+      field: "management",
+      summary: `Tratamiento: ${nombre}`,
+      apply: (c) => addTreatment(c, aiTreatment(nombre)),
+    });
+    understood.push(`tratamiento ${nombre.toLowerCase()} (fuera del diccionario)`);
+    highlight ??= "management";
+  }
+
   // 4) Hallazgos clínicos (síntomas)
   const symptoms = extractSymptoms(userText);
+  const hallazgosIa = ai?.findings?.trim();
+  if (hallazgosIa && !symptoms.length && caso.keyFindings.status !== "present" && pendingField !== "findings") {
+    patches.push({
+      field: "keyFindings",
+      summary: "Hallazgos clínicos",
+      apply: (c) => setText(c, "keyFindings", hallazgosIa, 0.8, { sourceType: "chat", excerpt: userText.slice(0, 120) }),
+    });
+  }
+  if (ai?.tags?.length) {
+    patches.push({
+      field: "searchTags",
+      summary: "Etiquetas de búsqueda",
+      apply: (c) => addSearchTags(c, ai.tags.slice(0, 6)),
+    });
+  }
+  if (ai?.timeline?.length && caso.timeline.length === 0) {
+    const hitos = ai.timeline.slice(0, 6);
+    patches.push({
+      field: "timeline",
+      summary: "Secuencia temporal",
+      apply: (c) => setTimeline(c, hitos.map((h) => ({ when: h.when, event: h.event, validatedByHcp: false }))),
+    });
+  }
   if (symptoms.length && caso.keyFindings.status !== "present" && pendingField !== "findings") {
     const text = capitalize(symptoms.join(", ")) + ".";
     patches.push({

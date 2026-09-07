@@ -107,6 +107,7 @@ export interface AiHints {
   sex: "female" | "male" | "other" | null;
   diagnosis: string | null;
   treatments: string[];
+  background: string | null;
   findings: string | null;
   outcome: string | null;
   specialty: string | null;
@@ -238,6 +239,15 @@ export function respond(
       apply: (c) => setText(c, "keyFindings", hallazgosIa, 0.8, { sourceType: "chat", excerpt: userText.slice(0, 120) }),
     });
   }
+  const antecedentesIa = ai?.background?.trim();
+  if (antecedentesIa && caso.background.status !== "present" && pendingField !== "background") {
+    patches.push({
+      field: "background",
+      summary: "Antecedentes",
+      apply: (c) => setText(c, "background", antecedentesIa, 0.8, { sourceType: "chat" }),
+    });
+  }
+
   if (ai?.tags?.length) {
     patches.push({
       field: "searchTags",

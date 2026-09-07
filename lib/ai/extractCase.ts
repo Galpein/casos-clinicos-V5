@@ -15,6 +15,7 @@ export interface AiEntities {
   sex: "female" | "male" | "other" | null;
   diagnosis: string | null;
   treatments: string[];
+  background: string | null;
   findings: string | null;
   outcome: string | null;
   specialty: string | null;
@@ -29,6 +30,7 @@ const SCHEMA = {
     sex: { type: "string", enum: ["female", "male", "other"], nullable: true },
     diagnosis: { type: "string", nullable: true },
     treatments: { type: "array", items: { type: "string" } },
+    background: { type: "string", nullable: true },
     findings: { type: "string", nullable: true },
     outcome: { type: "string", nullable: true },
     specialty: { type: "string", nullable: true },
@@ -58,12 +60,18 @@ Reglas estrictas:
   intervenciones no farmacológicas (cirugía, radioterapia, fototerapia,
   evitación del alérgeno, fisioterapia...). Si el texto dice que se operó, la
   cirugía es un tratamiento y debe aparecer.
-- "findings" resume en una frase los hallazgos de la exploración, si los hay.
+- "background" son los antecedentes del paciente: enfermedades previas,
+  alergias, tratamientos crónicos, o que el texto diga que no los hay.
+- "findings" son SÓLO los hallazgos de la exploración física o de las pruebas
+  (lesiones, escalas, analíticas). No metas aquí los antecedentes: si el texto
+  no describe exploración, devuelve null.
 - "outcome" describe en pocas palabras cómo evolucionó, si el texto lo dice.
 - "specialty" es la especialidad médica principal, en su forma amplia y en
   español con tildes: "Oncología", "Dermatología", "Pediatría", "Neurología".
   No uses subespecialidades ("Oncología pediátrica" → "Oncología").
-- "timeline" son hitos temporales explícitos del texto ("a las 6 semanas...").
+- "timeline" son hitos temporales explícitos del texto. "when" es sólo el
+  momento ("6 semanas"), y "event" qué ocurrió, en pocas palabras. No metas la
+  evolución en el evento: para eso está "outcome".
 - "tags" son 3-5 palabras clave para buscar el caso, en español y con tildes.
 
 Relato del profesional:

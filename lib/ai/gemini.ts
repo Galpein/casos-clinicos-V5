@@ -31,9 +31,9 @@ export interface AiResult<T> {
 export async function generateJson<T>(
   prompt: string,
   schema: Record<string, unknown>,
-  { timeoutMs = 15000 }: { timeoutMs?: number } = {},
+  { timeoutMs = 15000, model: override }: { timeoutMs?: number; model?: string } = {},
 ): Promise<AiResult<T>> {
-  const model = aiModel();
+  const model = override?.trim() || aiModel();
   const started = Date.now();
   const key = process.env.GEMINI_API_KEY;
 

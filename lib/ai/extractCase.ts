@@ -66,6 +66,8 @@ Relato del profesional:
 {TEXTO}
 """`;
 
-export async function extractWithAi(text: string) {
-  return generateJson<AiEntities>(INSTRUCCIONES.replace("{TEXTO}", text.slice(0, 6000)), SCHEMA as never);
+export async function extractWithAi(text: string, model?: string) {
+  return generateJson<AiEntities>(INSTRUCCIONES.replace("{TEXTO}", text.slice(0, 6000)), SCHEMA as never, {
+    model,
+  });
 }

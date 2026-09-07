@@ -1,0 +1,159 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>AtlasCases · Versión 5</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #16202e; background: #fff;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .hoja { width: 210mm; min-height: 297mm; padding: 15mm 15mm 12mm; margin: 0 auto; }
+
+  header { border-bottom: 2px solid #16202e; padding-bottom: 9px; display: flex; align-items: baseline; justify-content: space-between; }
+  h1 { font-size: 24px; letter-spacing: -.2px; }
+  h1 span { color: #2563a8; }
+  header .fecha { font-size: 10px; color: #6b7789; letter-spacing: .04em; text-transform: uppercase; }
+  .entradilla { font-size: 12.3px; color: #46536b; margin-top: 11px; line-height: 1.55; max-width: 150mm; }
+
+  h2 { font-size: 9.6px; text-transform: uppercase; letter-spacing: .1em; color: #8b95a7; margin: 16px 0 8px; }
+
+  /* Demostración */
+  .demo { border: 1px solid #d6dce6; border-radius: 5px; overflow: hidden; }
+  .demo-cab { background: #16202e; color: #fff; padding: 8px 12px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+  .demo-cuerpo { display: flex; }
+  .frase { width: 64mm; padding: 12px 12px; background: #f4f6fa; border-right: 1px solid #d6dce6; }
+  .frase .et { font-size: 8.6px; text-transform: uppercase; letter-spacing: .08em; color: #8b95a7; margin-bottom: 4px; }
+  .frase p { font-size: 11.6px; line-height: 1.58; font-style: italic; color: #29354a; }
+  .campos { flex: 1; padding: 12px 12px; }
+  .campos .et { font-size: 8.6px; text-transform: uppercase; letter-spacing: .08em; color: #8b95a7; margin-bottom: 5px; }
+  .rejilla { display: grid; grid-template-columns: 29mm 1fr; gap: 6px 10px; font-size: 11px; line-height: 1.4; }
+  .rejilla dt { color: #6b7789; }
+  .rejilla dd { color: #16202e; font-weight: 600; }
+  .pie-demo { padding: 9px 12px; background: #fff8ec; border-top: 1px solid #f0dcb8; font-size: 9.8px; line-height: 1.5; color: #7a5c22; }
+  .pie-demo b { color: #a06a10; }
+
+  /* Cambios */
+  .cambios { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 16px; }
+  .c { border-left: 2px solid #2563a8; padding-left: 10px; }
+  .c h3 { font-size: 12.2px; margin-bottom: 3px; }
+  .c p { font-size: 10.7px; line-height: 1.5; color: #46536b; }
+  .c .antes { color: #97a1b2; }
+
+  /* Comprobado */
+  .datos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+  .d { border: 1px solid #e2e7ee; border-radius: 4px; padding: 11px 8px; text-align: center; }
+  .d b { display: block; font-size: 19px; color: #2563a8; letter-spacing: -.3px; }
+  .d span { display: block; font-size: 9.2px; color: #6b7789; line-height: 1.3; margin-top: 3px; }
+
+  .estados { display: flex; gap: 7px; margin-top: 5px; }
+  .e { flex: 1; border: 1px solid #e2e7ee; border-radius: 4px; padding: 9px 10px; font-size: 10.3px; line-height: 1.4; }
+  .e b { display: block; font-size: 11px; margin-bottom: 2px; }
+  .e i { font-style: normal; color: #97a1b2; }
+  .pt { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  footer { margin-top: 16px; border-top: 1px solid #e2e7ee; padding-top: 8px; font-size: 9.2px; color: #97a1b2; line-height: 1.45; display: flex; justify-content: space-between; gap: 12px; }
+</style></head><body>
+<div class="hoja">
+
+  <header>
+    <h1>AtlasCases · <span>Versión 5</span></h1>
+    <p class="fecha">Resumen de cambios · Septiembre 2026</p>
+  </header>
+
+  <p class="entradilla">
+    Esta versión recoge la revisión de Enrique. Cambian tres cosas de fondo: los casos
+    <strong>dejan de perderse</strong>, el asistente <strong>entiende cualquier especialidad</strong>
+    y la biblioteca <strong>deja de parecerse a la lista de casos propios</strong>. El resto son
+    correcciones de lenguaje y de claridad en pantalla.
+  </p>
+
+  <h2>Lo más visible: de una frase suelta a un caso estructurado</h2>
+  <div class="demo">
+    <div class="demo-cab">El médico escribe esto — la aplicación entiende y rellena esto otro</div>
+    <div class="demo-cuerpo">
+      <div class="frase">
+        <p class="et">Escrito a mano por el profesional</p>
+        <p>«Niño de 7 años con un meduloblastoma. Sin antecedentes de tumores. Sano. Peso 30&nbsp;kg.
+        Sin más patologías. Se opera el tumor. Comienza ciclo de cisplatino durante 6 semanas,
+        con buena tolerancia salvo náuseas leves.»</p>
+      </div>
+      <div class="campos">
+        <p class="et">Rellenado solo, en poco más de un segundo</p>
+        <dl class="rejilla">
+          <dt>Paciente</dt><dd>Varón, 7 años</dd>
+          <dt>Diagnóstico</dt><dd>Meduloblastoma</dd>
+          <dt>Antecedentes</dt><dd>Sin antecedentes de tumores. Sano.</dd>
+          <dt>Tratamientos</dt><dd>Cirugía · Cisplatino</dd>
+          <dt>Evolución</dt><dd>Buena tolerancia salvo náuseas leves</dd>
+          <dt>Cronología</dt><dd>6 semanas — ciclo de cisplatino</dd>
+          <dt>Especialidad</dt><dd>Oncología</dd>
+          <dt>Etiquetas</dt><dd>meduloblastoma · pediatría · oncología</dd>
+        </dl>
+      </div>
+    </div>
+    <p class="pie-demo">
+      <b>Nada de esto se da por bueno solo.</b> Cada campo queda marcado como «Propuesto por IA»
+      hasta que el profesional lo valida, uno a uno o todos de una vez. En la versión anterior este
+      mismo caso no rellenaba ni un campo: el asistente sólo sabía de dermatología.
+    </p>
+  </div>
+
+  <h2>Qué cambia respecto a la versión 4</h2>
+  <div class="cambios">
+    <div class="c">
+      <h3>Los casos ya no se pierden</h3>
+      <p><span class="antes">Antes vivían en la memoria del navegador y al recargar desaparecían.</span>
+      Ahora quedan guardados, y se guardan solos según se escribe.</p>
+    </div>
+    <div class="c">
+      <h3>Guardar sin tenerlo todo</h3>
+      <p><span class="antes">Antes el botón estaba bloqueado hasta completar los diez campos mínimos.</span>
+      Ahora se guarda con un solo campo; si falta el título, se pide en ese momento.</p>
+    </div>
+    <div class="c">
+      <h3>Editar y borrar casos</h3>
+      <p>Se puede volver a cualquier caso y seguir donde se dejó. Al borrar uno ya publicado,
+      desaparece de la pantalla del autor pero <strong>la biblioteca lo conserva</strong>.</p>
+    </div>
+    <div class="c">
+      <h3>El asistente entiende todo</h3>
+      <p><span class="antes">Antes sólo reconocía términos de dermatología.</span>
+      Ahora interpreta el relato completo de cualquier especialidad y respeta el vocabulario propio.</p>
+    </div>
+    <div class="c">
+      <h3>Biblioteca nueva</h3>
+      <p>Filtros con el número de casos de cada opción, vista de lista o de tabla, y un buscador que
+      entiende sinónimos: «corticoide» encuentra los casos de hidrocortisona. Los borradores ya no entran.</p>
+    </div>
+    <div class="c">
+      <h3>Todo explicado en pantalla</h3>
+      <p>Cada etiqueta dice qué significa al pasar el ratón, la barra de progreso enseña exactamente
+      qué falta, y hay <strong>deshacer</strong> para volver atrás sin miedo.</p>
+    </div>
+  </div>
+
+  <h2>Los tres estados, con nombres nuevos</h2>
+  <div class="estados">
+    <div class="e"><b><span class="pt" style="background:#dc2626"></span>Borrador</b><i>Faltan campos obligatorios. No entra en la biblioteca.</i></div>
+    <div class="e"><b><span class="pt" style="background:#d97706"></span>Documentación esencial</b><i>Están los diez mínimos. Ya entra en la biblioteca.</i></div>
+    <div class="e"><b><span class="pt" style="background:#059669"></span>CARE completo</b><i>Cubre además los campos del estándar de publicación.</i></div>
+  </div>
+
+  <h2>Lo que se ha comprobado, no supuesto</h2>
+  <div class="datos">
+    <div class="d"><b>1,07 s</b><span>en entender un caso escrito a mano</span></div>
+    <div class="d"><b>4</b><span>modelos de IA comparados antes de elegir</span></div>
+    <div class="d"><b>19 mm</b><span>de margen en el PDF, imprima como imprima</span></div>
+    <div class="d"><b>0 px</b><span>de salto en la biblioteca al filtrar</span></div>
+    <div class="d"><b>36</b><span>casos de prueba en 7 especialidades</span></div>
+  </div>
+
+  <footer>
+    <p>Los casos, pacientes y cifras que aparecen en la aplicación son <strong>material de demostración</strong>:
+    ninguno corresponde a un paciente real.</p>
+    <p>Versión 5 · Pendiente:<br>sesión con médicos y revisión del vocabulario.</p>
+  </footer>
+
+</div>
+</body></html>

@@ -102,9 +102,19 @@ export function caseDocumentHtml(c: ClinicalCase): string {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>${esc(c.title || c.caseId)}</title>
 <style>
-  @page { size: A4; margin: 18mm; }
+  /* El margen no se deja en manos de @page.
+     Si el usuario elige "sin márgenes" en el diálogo de impresión, @page se
+     anula y el texto se pega al borde. Por eso @page sólo reserva el mínimo
+     que ningún papel puede imprimir, y el margen real lo pone .sheet, que se
+     mantiene también al imprimir. */
+  @page { size: A4; margin: 6mm; }
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, system-ui, "Segoe UI", sans-serif; color: #0f172a; line-height: 1.5; margin: 0; }
+  body { font-family: -apple-system, system-ui, "Segoe UI", sans-serif; color: #0f172a; line-height: 1.5; margin: 0; background: #f1f5f9; }
+  .sheet { max-width: 210mm; min-height: 297mm; margin: 0 auto; padding: 12mm 13mm; background: #fff; box-shadow: 0 1px 12px rgba(15,23,42,.12); }
+  @media print {
+    body { background: #fff; }
+    .sheet { max-width: none; min-height: 0; margin: 0; box-shadow: none; }
+  }
   .header { border-bottom: 3px solid ${color}; padding-bottom: 14px; margin-bottom: 22px; }
   .code { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; color: #64748b; }
   .status { display: inline-block; font-size: 11px; font-weight: 700; color: ${color}; border: 1px solid ${color}; border-radius: 999px; padding: 2px 10px; margin-left: 8px; }
@@ -123,6 +133,7 @@ export function caseDocumentHtml(c: ClinicalCase): string {
   .chips span { display: inline-block; background: #f1f5f9; border-radius: 6px; padding: 2px 8px; font-size: 12px; margin: 2px 4px 0 0; }
   .footer { margin-top: 26px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
 </style></head><body>
+<div class="sheet">
   <div class="header">
     <span class="code">${esc(c.caseId)}</span>
     <span class="status">${esc(meta.label)} · ${status.pct}%</span>
@@ -147,6 +158,7 @@ export function caseDocumentHtml(c: ClinicalCase): string {
     <span>AtlasCases · ${esc(c.caseId)}</span>
     <span>${esc(date)} · Col. ${esc(c.authorId)}</span>
   </div>
+</div>
 </body></html>`;
 }
 
@@ -276,6 +288,24 @@ export function printCase(c: ClinicalCase) {
   w.document.close();
   w.focus();
   setTimeout(() => w.print(), 350);
+}
+
+/**
+ * Descarga el caso como archivo HTML autocontenido.
+ *
+ * A diferencia del PDF, se puede abrir en cualquier equipo, buscar por texto y
+ * adjuntar a un correo sin depender del diálogo de impresión.
+ */
+export function downloadCaseHtml(c: ClinicalCase) {
+  const blob = new Blob([caseDocumentHtml(c)], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${c.caseId}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 export function openPresentation(c: ClinicalCase) {

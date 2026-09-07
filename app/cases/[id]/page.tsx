@@ -8,10 +8,11 @@ import { useCasesStore } from "@/stores/cases.store";
 import { computeCaseStatus } from "@/lib/case-status";
 import { deriveLibraryIndex } from "@/lib/library-index";
 import { formatDate } from "@/lib/utils";
-import { openPresentation, printCase } from "@/lib/export/caseExport";
+import { downloadCaseHtml, openPresentation, printCase } from "@/lib/export/caseExport";
 import { conditionMeta } from "@/components/case/condition";
 import { CaseDocument } from "@/components/case/CaseDocument";
 import { CompletenessDetail, StatusBadge } from "@/components/case/CompletenessBar";
+import { Hint } from "@/components/ui/Hint";
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
@@ -91,6 +92,13 @@ export default function CaseDetailPage() {
               Editar
             </Link>
             <button
+              onClick={() => downloadCaseHtml(caso)}
+              title="Descargar el caso como archivo HTML"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600"
+            >
+              HTML
+            </button>
+            <button
               onClick={() => printCase(caso)}
               className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
             >
@@ -139,11 +147,22 @@ export default function CaseDetailPage() {
             </div>
           )}
 
-          {/* Library Index derivado */}
+          {/* Índice derivado del caso. Enrique preguntaba qué es y por qué
+              está aquí: se queda, pero con nombre en cristiano y explicación. */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Índice de biblioteca
-            </p>
+            <div className="mb-2 flex items-center gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Cómo se encuentra este caso
+              </p>
+              <Hint
+                text="Los términos con los que este caso queda indexado en la biblioteca. Se generan solos a partir de lo que has validado, y son los que hacen que otro profesional lo encuentre al buscar por patología o tratamiento."
+                side="bottom"
+              >
+                <span className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[9px] font-bold text-slate-400">
+                  ?
+                </span>
+              </Hint>
+            </div>
             <div className="space-y-3 text-sm">
               <div>
                 <p className="mb-1 text-[11px] text-slate-400">Diagnóstico</p>

@@ -53,13 +53,18 @@ Reglas estrictas:
 - No inventes nada. Si un dato no está en el texto, devuélvelo como null o lista vacía.
 - No diagnostiques ni recomiendes: sólo extraes lo que el profesional ha escrito.
 - "diagnosis" es la patología principal, en español y en singular.
-- "treatments" son los principios activos o intervenciones mencionados, uno por
-  elemento, con el nombre del fármaco a secas (sin dosis ni pauta).
+- "treatments" son TODAS las actuaciones terapéuticas mencionadas, una por
+  elemento: tanto fármacos (por su principio activo, sin dosis ni pauta) como
+  intervenciones no farmacológicas (cirugía, radioterapia, fototerapia,
+  evitación del alérgeno, fisioterapia...). Si el texto dice que se operó, la
+  cirugía es un tratamiento y debe aparecer.
 - "findings" resume en una frase los hallazgos de la exploración, si los hay.
 - "outcome" describe en pocas palabras cómo evolucionó, si el texto lo dice.
-- "specialty" es la especialidad médica a la que corresponde el caso.
+- "specialty" es la especialidad médica principal, en su forma amplia y en
+  español con tildes: "Oncología", "Dermatología", "Pediatría", "Neurología".
+  No uses subespecialidades ("Oncología pediátrica" → "Oncología").
 - "timeline" son hitos temporales explícitos del texto ("a las 6 semanas...").
-- "tags" son 3-5 palabras clave para buscar el caso.
+- "tags" son 3-5 palabras clave para buscar el caso, en español y con tildes.
 
 Relato del profesional:
 """

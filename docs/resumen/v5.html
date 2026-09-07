@@ -3,83 +3,93 @@
 <style>
   @page { size: A4; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    color: #16202e; background: #fff;
-    -webkit-print-color-adjust: exact; print-color-adjust: exact;
-  }
-  .hoja { width: 210mm; min-height: 297mm; padding: 15mm 15mm 12mm; margin: 0 auto; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #16202e; background: #fff;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .hoja { width: 210mm; min-height: 297mm; padding: 13mm 15mm 9mm; margin: 0 auto; }
 
-  header { border-bottom: 2px solid #16202e; padding-bottom: 9px; display: flex; align-items: baseline; justify-content: space-between; }
-  h1 { font-size: 24px; letter-spacing: -.2px; }
+  /* Cabecera */
+  header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: 3px solid #16202e; padding-bottom: 10px; }
+  h1 { font-size: 25px; letter-spacing: -.4px; line-height: 1; }
   h1 span { color: #2563a8; }
-  header .fecha { font-size: 10px; color: #6b7789; letter-spacing: .04em; text-transform: uppercase; }
-  .entradilla { font-size: 12.3px; color: #46536b; margin-top: 11px; line-height: 1.55; max-width: 150mm; }
+  header .meta { text-align: right; font-size: 9.5px; color: #6b7789; line-height: 1.5; }
+  header .meta b { color: #16202e; display: block; font-size: 10.5px; }
+  .entradilla { font-size: 12.3px; color: #46536b; margin-top: 10px; line-height: 1.5; max-width: 165mm; }
+  .entradilla b { color: #16202e; }
 
-  h2 { font-size: 9.6px; text-transform: uppercase; letter-spacing: .1em; color: #8b95a7; margin: 16px 0 8px; }
+  h2 { font-size: 9.6px; text-transform: uppercase; letter-spacing: .11em; color: #8b95a7; margin: 12px 0 7px; }
 
   /* Demostración */
-  .demo { border: 1px solid #d6dce6; border-radius: 5px; overflow: hidden; }
-  .demo-cab { background: #16202e; color: #fff; padding: 8px 12px; font-size: 11px; font-weight: 600; letter-spacing: .02em; }
-  .demo-cuerpo { display: flex; }
-  .frase { width: 64mm; padding: 12px 12px; background: #f4f6fa; border-right: 1px solid #d6dce6; }
-  .frase .et { font-size: 8.6px; text-transform: uppercase; letter-spacing: .08em; color: #8b95a7; margin-bottom: 4px; }
-  .frase p { font-size: 11.6px; line-height: 1.58; font-style: italic; color: #29354a; }
-  .campos { flex: 1; padding: 12px 12px; }
-  .campos .et { font-size: 8.6px; text-transform: uppercase; letter-spacing: .08em; color: #8b95a7; margin-bottom: 5px; }
-  .rejilla { display: grid; grid-template-columns: 29mm 1fr; gap: 6px 10px; font-size: 11px; line-height: 1.4; }
+  .demo { border: 1px solid #ccd5e2; border-radius: 6px; overflow: hidden; }
+  .demo-cab { background: #16202e; color: #fff; padding: 9px 13px; font-size: 11.5px; font-weight: 600; }
+  .demo-cuerpo { display: flex; align-items: stretch; }
+  .frase { width: 61mm; padding: 13px; background: #f4f6fa; }
+  .et { font-size: 8.4px; text-transform: uppercase; letter-spacing: .09em; color: #8b95a7; margin-bottom: 7px; }
+  .frase p { font-size: 11.4px; line-height: 1.6; font-style: italic; color: #29354a; }
+  .flecha { width: 13mm; background: #f4f6fa; display: flex; align-items: center; justify-content: center;
+            color: #2563a8; font-size: 26px; line-height: 1; font-weight: 300; }
+  .campos { flex: 1; padding: 13px; border-left: 1px solid #e4e9f1; }
+  .rejilla { display: grid; grid-template-columns: 28mm 1fr; gap: 6px 10px; font-size: 11px; line-height: 1.4; }
   .rejilla dt { color: #6b7789; }
   .rejilla dd { color: #16202e; font-weight: 600; }
-  .pie-demo { padding: 9px 12px; background: #fff8ec; border-top: 1px solid #f0dcb8; font-size: 9.8px; line-height: 1.5; color: #7a5c22; }
-  .pie-demo b { color: #a06a10; }
+  .pie-demo { padding: 9px 13px; background: #fff8ec; border-top: 1px solid #f0dcb8; font-size: 9.8px; color: #7a5c22; line-height: 1.5; }
+  .pie-demo b { color: #9a6408; }
 
-  /* Cambios */
-  .cambios { display: grid; grid-template-columns: 1fr 1fr; gap: 13px 16px; }
-  .c { border-left: 2px solid #2563a8; padding-left: 10px; }
-  .c h3 { font-size: 12.2px; margin-bottom: 3px; }
-  .c p { font-size: 10.7px; line-height: 1.5; color: #46536b; }
-  .c .antes { color: #97a1b2; }
+  /* Antes / Ahora */
+  .tabla { border: 1px solid #e2e7ee; border-radius: 6px; overflow: hidden; }
+  .fila { display: grid; grid-template-columns: 31mm 1fr 1fr; border-top: 1px solid #eef1f6; }
+  .fila:first-child { border-top: 0; }
+  .fila.cab { background: #f7f9fc; }
+  .fila.cab div { padding: 6px 11px; font-size: 8.6px; text-transform: uppercase; letter-spacing: .09em; color: #8b95a7; font-weight: 600; }
+  .fila.cab .ahora { color: #2563a8; }
+  .tema { padding: 8px 11px; font-size: 10.6px; font-weight: 600; background: #fafbfd; }
+  .antes, .ahora { padding: 8px 11px; font-size: 10.3px; line-height: 1.42; }
+  .antes { color: #97a1b2; }
+  .ahora { color: #16202e; background: #f6f9fd; }
+  .antes::before { content: "×"; color: #c9d0da; font-weight: 700; margin-right: 6px; }
+  .ahora::before { content: "✓"; color: #2f9e6b; font-weight: 700; margin-right: 6px; }
 
-  /* Comprobado */
+  /* Escalera de estados */
+  .escalera { display: flex; gap: 3px; }
+  .paso { flex: 1; border-radius: 4px; padding: 9px 11px; color: #fff; }
+  .paso b { display: block; font-size: 11px; }
+  .paso span { display: block; font-size: 9.2px; opacity: .85; line-height: 1.35; margin-top: 2px; }
+  .p1 { background: #c0392b; } .p2 { background: #d18412; } .p3 { background: #17845c; }
+
+  /* Cifras */
   .datos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
-  .d { border: 1px solid #e2e7ee; border-radius: 4px; padding: 11px 8px; text-align: center; }
-  .d b { display: block; font-size: 19px; color: #2563a8; letter-spacing: -.3px; }
-  .d span { display: block; font-size: 9.2px; color: #6b7789; line-height: 1.3; margin-top: 3px; }
+  .d { border: 1px solid #e2e7ee; border-radius: 5px; padding: 11px 8px; text-align: center; }
+  .d b { display: block; font-size: 20px; color: #2563a8; letter-spacing: -.5px; }
+  .d span { display: block; font-size: 9.2px; color: #6b7789; line-height: 1.35; margin-top: 4px; }
 
-  .estados { display: flex; gap: 7px; margin-top: 5px; }
-  .e { flex: 1; border: 1px solid #e2e7ee; border-radius: 4px; padding: 9px 10px; font-size: 10.3px; line-height: 1.4; }
-  .e b { display: block; font-size: 11px; margin-bottom: 2px; }
-  .e i { font-style: normal; color: #97a1b2; }
-  .pt { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-
-  footer { margin-top: 16px; border-top: 1px solid #e2e7ee; padding-top: 8px; font-size: 9.2px; color: #97a1b2; line-height: 1.45; display: flex; justify-content: space-between; gap: 12px; }
+  footer { margin-top: 11px; border-top: 1px solid #e2e7ee; padding-top: 8px; font-size: 9.2px; color: #97a1b2;
+           line-height: 1.5; display: flex; justify-content: space-between; gap: 14px; }
 </style></head><body>
 <div class="hoja">
 
   <header>
     <h1>AtlasCases · <span>Versión 5</span></h1>
-    <p class="fecha">Resumen de cambios · Septiembre 2026</p>
+    <p class="meta"><b>Álvaro Galán</b>Producto y desarrollo · Septiembre 2026</p>
   </header>
 
   <p class="entradilla">
-    Esta versión recoge la revisión de Enrique. Cambian tres cosas de fondo: los casos
-    <strong>dejan de perderse</strong>, el asistente <strong>entiende cualquier especialidad</strong>
-    y la biblioteca <strong>deja de parecerse a la lista de casos propios</strong>. El resto son
-    correcciones de lenguaje y de claridad en pantalla.
+    En esta versión he cambiado tres cosas de fondo: los casos <b>dejan de perderse</b>,
+    el asistente <b>entiende cualquier especialidad</b> y la biblioteca <b>deja de parecerse
+    a la lista de casos propios</b>. Lo demás son correcciones de lenguaje y de claridad en pantalla.
   </p>
 
-  <h2>Lo más visible: de una frase suelta a un caso estructurado</h2>
+  <h2>Lo más visible · de una frase suelta a un caso estructurado</h2>
   <div class="demo">
-    <div class="demo-cab">El médico escribe esto — la aplicación entiende y rellena esto otro</div>
+    <div class="demo-cab">El profesional escribe esto — la aplicación rellena esto otro</div>
     <div class="demo-cuerpo">
       <div class="frase">
-        <p class="et">Escrito a mano por el profesional</p>
+        <p class="et">Escrito a mano</p>
         <p>«Niño de 7 años con un meduloblastoma. Sin antecedentes de tumores. Sano. Peso 30&nbsp;kg.
         Sin más patologías. Se opera el tumor. Comienza ciclo de cisplatino durante 6 semanas,
         con buena tolerancia salvo náuseas leves.»</p>
       </div>
+      <div class="flecha">→</div>
       <div class="campos">
-        <p class="et">Rellenado solo, en poco más de un segundo</p>
+        <p class="et">Rellenado solo · 1 segundo</p>
         <dl class="rejilla">
           <dt>Paciente</dt><dd>Varón, 7 años</dd>
           <dt>Diagnóstico</dt><dd>Meduloblastoma</dd>
@@ -100,47 +110,53 @@
   </div>
 
   <h2>Qué cambia respecto a la versión 4</h2>
-  <div class="cambios">
-    <div class="c">
-      <h3>Los casos ya no se pierden</h3>
-      <p><span class="antes">Antes vivían en la memoria del navegador y al recargar desaparecían.</span>
-      Ahora quedan guardados, y se guardan solos según se escribe.</p>
+  <div class="tabla">
+    <div class="fila cab"><div></div><div>Antes</div><div class="ahora">Ahora</div></div>
+    <div class="fila">
+      <div class="tema">Guardado</div>
+      <div class="antes">Todo se perdía al recargar la página</div>
+      <div class="ahora">Se guarda solo mientras se escribe</div>
     </div>
-    <div class="c">
-      <h3>Guardar sin tenerlo todo</h3>
-      <p><span class="antes">Antes el botón estaba bloqueado hasta completar los diez campos mínimos.</span>
-      Ahora se guarda con un solo campo; si falta el título, se pide en ese momento.</p>
+    <div class="fila">
+      <div class="tema">Empezar un caso</div>
+      <div class="antes">Había que completar diez campos para poder guardar</div>
+      <div class="ahora">Se guarda desde el primer campo</div>
     </div>
-    <div class="c">
-      <h3>Editar y borrar casos</h3>
-      <p>Se puede volver a cualquier caso y seguir donde se dejó. Al borrar uno ya publicado,
-      desaparece de la pantalla del autor pero <strong>la biblioteca lo conserva</strong>.</p>
+    <div class="fila">
+      <div class="tema">Corregir y borrar</div>
+      <div class="antes">Un caso guardado no se podía tocar</div>
+      <div class="ahora">Se edita y se borra; lo publicado permanece en la biblioteca</div>
     </div>
-    <div class="c">
-      <h3>El asistente entiende todo</h3>
-      <p><span class="antes">Antes sólo reconocía términos de dermatología.</span>
-      Ahora interpreta el relato completo de cualquier especialidad y respeta el vocabulario propio.</p>
+    <div class="fila">
+      <div class="tema">El asistente</div>
+      <div class="antes">Sólo entendía casos de dermatología</div>
+      <div class="ahora">Entiende cualquier especialidad, en un segundo</div>
     </div>
-    <div class="c">
-      <h3>Biblioteca nueva</h3>
-      <p>Filtros con el número de casos de cada opción, vista de lista o de tabla, y un buscador que
-      entiende sinónimos: «corticoide» encuentra los casos de hidrocortisona. Los borradores ya no entran.</p>
+    <div class="fila">
+      <div class="tema">Biblioteca</div>
+      <div class="antes">Idéntica a la lista de casos propios</div>
+      <div class="ahora">Filtros con contadores, lista o tabla y búsqueda por sinónimos</div>
     </div>
-    <div class="c">
-      <h3>Todo explicado en pantalla</h3>
-      <p>Cada etiqueta dice qué significa al pasar el ratón, la barra de progreso enseña exactamente
-      qué falta, y hay <strong>deshacer</strong> para volver atrás sin miedo.</p>
+    <div class="fila">
+      <div class="tema">Claridad</div>
+      <div class="antes">Etiquetas sin explicar y sin vuelta atrás</div>
+      <div class="ahora">Cada etiqueta se explica al pasar el ratón, y hay deshacer</div>
+    </div>
+    <div class="fila">
+      <div class="tema">Exportar</div>
+      <div class="antes">El PDF salía pegado al borde</div>
+      <div class="ahora">Márgenes correctos y descarga también en HTML</div>
     </div>
   </div>
 
-  <h2>Los tres estados, con nombres nuevos</h2>
-  <div class="estados">
-    <div class="e"><b><span class="pt" style="background:#dc2626"></span>Borrador</b><i>Faltan campos obligatorios. No entra en la biblioteca.</i></div>
-    <div class="e"><b><span class="pt" style="background:#d97706"></span>Documentación esencial</b><i>Están los diez mínimos. Ya entra en la biblioteca.</i></div>
-    <div class="e"><b><span class="pt" style="background:#059669"></span>CARE completo</b><i>Cubre además los campos del estándar de publicación.</i></div>
+  <h2>Los tres niveles de un caso, con nombres nuevos</h2>
+  <div class="escalera">
+    <div class="paso p1"><b>Borrador</b><span>Faltan campos obligatorios. No entra en la biblioteca.</span></div>
+    <div class="paso p2"><b>Documentación esencial</b><span>Están los diez mínimos. Ya entra en la biblioteca.</span></div>
+    <div class="paso p3"><b>CARE completo</b><span>Cubre además el estándar de publicación de casos.</span></div>
   </div>
 
-  <h2>Lo que se ha comprobado, no supuesto</h2>
+  <h2>Comprobado, no supuesto</h2>
   <div class="datos">
     <div class="d"><b>1,07 s</b><span>en entender un caso escrito a mano</span></div>
     <div class="d"><b>4</b><span>modelos de IA comparados antes de elegir</span></div>
@@ -150,9 +166,9 @@
   </div>
 
   <footer>
-    <p>Los casos, pacientes y cifras que aparecen en la aplicación son <strong>material de demostración</strong>:
+    <p>Los casos, pacientes y cifras que aparecen en la aplicación son <b>material de demostración</b>:
     ninguno corresponde a un paciente real.</p>
-    <p>Versión 5 · Pendiente:<br>sesión con médicos y revisión del vocabulario.</p>
+    <p style="text-align:right">Siguiente paso:<br>sesión con médicos y revisión del vocabulario.</p>
   </footer>
 
 </div>

@@ -5,12 +5,8 @@ import type { LibraryIndex } from "@/types/library-index";
 import { STATUS_META } from "@/lib/case-status";
 import { formatDate } from "@/lib/utils";
 import { ageSummary, outcomeLabel, sexLabel } from "@/lib/labels";
-import {
-  FACET_LABELS,
-  type FacetKey,
-  type FacetOption,
-  type SortField,
-} from "./facets";
+import { useState } from "react";
+import { FACET_LABELS, type FacetKey, type SortField } from "./facets";
 
 // ── Piezas compartidas ──────────────────────────────────────────────────────
 
@@ -32,66 +28,108 @@ function Tag({ children }: { children: React.ReactNode }) {
 
 // ── Panel de facetas ────────────────────────────────────────────────────────
 
+const VISIBLES = 6;
+/** Por debajo de esto no compensa un "mostrar más": se enseñan todas. */
+const MINIMO_PARA_PLEGAR = 3;
+
+/**
+ * Panel de filtros.
+ *
+ * El catálogo de opciones es fijo (no depende de los filtros puestos) y lo
+ * único que se mueve son los contadores. Las opciones que se quedan a cero se
+ * atenúan pero siguen ahí: si desaparecieran, la lista cambiaría de alto en
+ * cada clic y la página daría saltos.
+ */
 export function FacetPanel({
   keys,
-  options,
+  catalog,
+  counts,
   selection,
   onToggle,
   onClear,
   active,
 }: {
   keys: FacetKey[];
-  options: Record<FacetKey, FacetOption[]>;
+  catalog: Record<FacetKey, string[]>;
+  counts: Record<FacetKey, Map<string, number>>;
   selection: Record<FacetKey, string[]>;
   onToggle: (key: FacetKey, value: string) => void;
   onClear: () => void;
   active: number;
 }) {
-  return (
-    <aside className="w-60 shrink-0">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-800">Filtros</h2>
-        {active > 0 && (
-          <button onClick={onClear} className="text-[11px] font-medium text-blue-600 hover:underline">
-            Limpiar ({active})
-          </button>
-        )}
-      </div>
+  const [expandidas, setExpandidas] = useState<FacetKey[]>([]);
 
-      <div className="space-y-5">
-        {keys.map((key) => {
-          const opts = options[key];
-          if (opts.length === 0) return null;
-          return (
-            <div key={key}>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                {FACET_LABELS[key]}
-              </p>
-              <div className="space-y-1">
-                {opts.slice(0, 8).map((o) => {
-                  const checked = selection[key].includes(o.value);
-                  return (
-                    <label
-                      key={o.value}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-0.5 hover:bg-white"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => onToggle(key, o.value)}
-                        className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
-                      />
-                      <span className={`flex-1 truncate text-[13px] ${checked ? "font-medium text-slate-800" : "text-slate-600"}`}>
-                        {o.value}
-                      </span>
-                      <span className="text-[11px] tabular-nums text-slate-400">{o.count}</span>
-                    </label>
-                  );
-                })}
+  return (
+    <aside className="w-56 shrink-0">
+      <div className="sticky top-6">
+        <div className="mb-4 flex h-6 items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-800">Filtros</h2>
+          {active > 0 && (
+            <button onClick={onClear} className="text-[11px] font-medium text-blue-600 hover:underline">
+              Limpiar ({active})
+            </button>
+          )}
+        </div>
+
+        <div className="max-h-[calc(100vh-8rem)] space-y-5 overflow-y-auto pr-1">
+          {keys.map((key) => {
+            const todas = catalog[key];
+            if (todas.length === 0) return null;
+            const abierta = expandidas.includes(key);
+            const ocultas = todas.length - VISIBLES;
+            const plegable = ocultas >= MINIMO_PARA_PLEGAR;
+            const visibles = !plegable || abierta ? todas : todas.slice(0, VISIBLES);
+            return (
+              <div key={key}>
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {FACET_LABELS[key]}
+                </p>
+                <div className="space-y-0.5">
+                  {visibles.map((value) => {
+                    const checked = selection[key].includes(value);
+                    const count = counts[key].get(value) ?? 0;
+                    const vacia = count === 0 && !checked;
+                    return (
+                      <label
+                        key={value}
+                        className={`flex items-center gap-2 rounded-md px-1 py-1 ${
+                          vacia ? "cursor-default opacity-40" : "cursor-pointer hover:bg-white"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={vacia}
+                          onChange={() => onToggle(key, value)}
+                          className="h-3.5 w-3.5 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
+                        />
+                        <span
+                          title={value}
+                          className={`flex-1 truncate text-[13px] ${checked ? "font-medium text-slate-900" : "text-slate-600"}`}
+                        >
+                          {value}
+                        </span>
+                        <span className="w-6 shrink-0 text-right text-[11px] tabular-nums text-slate-400">
+                          {count}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {plegable && (
+                  <button
+                    onClick={() =>
+                      setExpandidas((e) => (abierta ? e.filter((k) => k !== key) : [...e, key]))
+                    }
+                    className="mt-1 px-1 text-[11px] font-medium text-blue-600 hover:underline"
+                  >
+                    {abierta ? "Mostrar menos" : `Mostrar ${ocultas} más`}
+                  </button>
+                )}
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </aside>
   );

@@ -94,23 +94,38 @@ export interface FacetOption {
   count: number;
 }
 
-/** Opciones de una faceta con su contador, ya ordenadas. */
-export function facetOptions(
+function countBy(items: LibraryIndex[], key: FacetKey): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const i of items) {
+    for (const v of new Set(valuesOf(i, key))) counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/**
+ * Catálogo estable de opciones de una faceta.
+ *
+ * Se calcula sobre el fondo completo y NO depende de los filtros activos: la
+ * lista de opciones y su orden no cambian nunca. Lo que cambia es el contador
+ * de cada una. Si el catálogo se recalculara con los filtros puestos, las
+ * opciones aparecerían y desaparecerían al marcar una casilla y la página
+ * daría saltos con cada clic.
+ */
+export function facetCatalog(items: LibraryIndex[], key: FacetKey): string[] {
+  const totals = countBy(items, key);
+  return [...totals.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"))
+    .map(([value]) => value);
+}
+
+/** Contadores de una faceta en el contexto de los demás filtros. */
+export function facetCounts(
   items: LibraryIndex[],
   query: string,
   sel: Selection,
   key: FacetKey,
-): FacetOption[] {
-  const base = applyFilters(items, query, sel, key);
-  const counts = new Map<string, number>();
-  for (const i of base) {
-    for (const v of new Set(valuesOf(i, key))) counts.set(v, (counts.get(v) ?? 0) + 1);
-  }
-  // Las opciones ya marcadas se mantienen aunque su cuenta sea cero.
-  for (const v of sel[key]) if (!counts.has(v)) counts.set(v, 0);
-  return [...counts.entries()]
-    .map(([value, count]) => ({ value, count }))
-    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+): Map<string, number> {
+  return countBy(applyFilters(items, query, sel, key), key);
 }
 
 export type SortField = "updatedAt" | "title" | "diagnosis" | "level";

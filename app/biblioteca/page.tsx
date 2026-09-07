@@ -7,11 +7,11 @@ import type { LibraryIndex } from "@/types/library-index";
 import {
   applyFilters,
   EMPTY_SELECTION,
-  facetOptions,
-  FACET_LABELS,
+  valuesOf,
+  facetCatalog,
+  facetCounts,
   sortItems,
   type FacetKey,
-  type FacetOption,
   type Selection,
   type SortField,
 } from "@/components/library/facets";
@@ -32,6 +32,11 @@ import {
  */
 
 const FACET_KEYS: FacetKey[] = ["specialty", "diagnosis", "treatment", "caseType", "level", "sex"];
+
+/** Valores de un caso para una faceta, sin importar la implementación interna. */
+function valuesOfSafe(index: LibraryIndex, key: FacetKey): string[] {
+  return valuesOf(index, key);
+}
 const PER_PAGE = 10;
 
 export default function BibliotecaPage() {
@@ -51,11 +56,29 @@ export default function BibliotecaPage() {
 
   const indexes: LibraryIndex[] = useMemo(() => cases.map(deriveLibraryIndex), [cases]);
 
-  const options = useMemo(() => {
-    const o = {} as Record<FacetKey, FacetOption[]>;
-    for (const k of FACET_KEYS) o[k] = facetOptions(indexes, query, selection, k);
-    return o;
+  // Catálogo fijo: no depende de los filtros, así la lista no cambia de alto
+  // al marcar una casilla. Sólo se recalculan los contadores.
+  const catalog = useMemo(() => {
+    const c = {} as Record<FacetKey, string[]>;
+    for (const k of FACET_KEYS) c[k] = facetCatalog(indexes, k);
+    return c;
+  }, [indexes]);
+
+  const counts = useMemo(() => {
+    const c = {} as Record<FacetKey, Map<string, number>>;
+    for (const k of FACET_KEYS) c[k] = facetCounts(indexes, query, selection, k);
+    return c;
   }, [indexes, query, selection]);
+
+  // Atajos de exploración: fijos también, calculados sobre el fondo completo.
+  const explorar = useMemo(() => {
+    const total = (key: FacetKey, value: string) =>
+      indexes.filter((i) => valuesOfSafe(i, key).includes(value)).length;
+    return [
+      ...catalog.specialty.slice(0, 6).map((v) => ({ key: "specialty" as FacetKey, value: v, total: total("specialty", v) })),
+      ...catalog.caseType.slice(0, 4).map((v) => ({ key: "caseType" as FacetKey, value: v, total: total("caseType", v) })),
+    ];
+  }, [catalog, indexes]);
 
   const results = useMemo(
     () => sortItems(applyFilters(indexes, query, selection), sort.field, sort.dir),
@@ -86,10 +109,6 @@ export default function BibliotecaPage() {
   const onSort = (field: SortField) =>
     setSort((s) => ({ field, dir: s.field === field ? ((s.dir * -1) as 1 | -1) : 1 }));
 
-  // Explorar por especialidad: atajo a la faceta correspondiente.
-  const especialidades = options.specialty.slice(0, 6);
-  const retos = options.caseType.slice(0, 5);
-
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="border-b border-slate-200 bg-white px-8 py-6">
@@ -116,24 +135,27 @@ export default function BibliotecaPage() {
 
         {/* Exploración rápida: lo que en los bocetos era "explorar por
             especialidad" y "por reto clínico". Son atajos a las facetas. */}
+        {/* Atajos de exploración. Son siempre los mismos y con el mismo
+            recuento: si cambiaran al filtrar, la fila se recompondría y la
+            página daría un salto en cada clic. */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Explorar
           </span>
-          {[...especialidades, ...retos].map((o) => {
-            const key: FacetKey = especialidades.includes(o) ? "specialty" : "caseType";
-            const active = selection[key].includes(o.value);
+          {explorar.map((o) => {
+            const active = selection[o.key].includes(o.value);
             return (
               <button
-                key={`${key}-${o.value}`}
-                onClick={() => toggle(key, o.value)}
+                key={`${o.key}-${o.value}`}
+                onClick={() => toggle(o.key, o.value)}
                 className={`rounded-full border px-3 py-1 text-[12px] font-medium transition-colors ${
                   active
-                    ? "border-blue-500 bg-blue-50 text-blue-700"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                    ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
                 }`}
               >
-                {o.value} <span className="text-slate-400">{o.count}</span>
+                {o.value}{" "}
+                <span className={active ? "text-blue-100" : "text-slate-400"}>{o.total}</span>
               </button>
             );
           })}
@@ -143,7 +165,8 @@ export default function BibliotecaPage() {
       <div className="flex gap-8 p-8">
         <FacetPanel
           keys={FACET_KEYS}
-          options={options}
+          catalog={catalog}
+          counts={counts}
           selection={selection}
           onToggle={toggle}
           onClear={clear}
@@ -164,7 +187,7 @@ export default function BibliotecaPage() {
                   key={v}
                   onClick={() => setView(v)}
                   className={`rounded-md px-3 py-1 text-[12px] font-medium transition-colors ${
-                    view === v ? "bg-slate-900 text-white" : "text-slate-500 hover:text-slate-800"
+                    view === v ? "bg-blue-600 text-white" : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   {v === "list" ? "Lista" : "Tabla"}
@@ -185,13 +208,19 @@ export default function BibliotecaPage() {
               <div className="min-w-0 flex-1">
                 <LibraryList items={visible} selectedId={selectedId} onSelect={setSelectedId} />
               </div>
-              {selected && (
-                <div className="hidden w-80 shrink-0 xl:block">
-                  <div className="sticky top-8">
+              <div className="hidden w-80 shrink-0 xl:block">
+                <div className="sticky top-6">
+                  {selected ? (
                     <CaseSummaryPanel index={selected} />
-                  </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center">
+                      <p className="text-[13px] text-slate-400">
+                        Selecciona un caso de la lista para ver su resumen aquí.
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <LibraryTable
@@ -222,7 +251,7 @@ export default function BibliotecaPage() {
                     key={n}
                     onClick={() => setPage(n)}
                     className={`rounded-lg px-3 py-1 text-[13px] font-medium ${
-                      n === current ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-white"
+                      n === current ? "bg-blue-600 text-white" : "text-slate-500 hover:bg-white"
                     }`}
                   >
                     {n}
